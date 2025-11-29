@@ -3,8 +3,12 @@ using System.Collections.Generic;
 
 namespace XDay.AI
 {
-    internal class SteeringForceNavigator : ISteeringForceNavigator
+    internal class NavigatorSteeringForce : INavigatorSteeringForce
     {
+        public void OnDestroy()
+        {
+        }
+
         public void SetAgent(IAgent agent)
         {
             m_Agent = agent;

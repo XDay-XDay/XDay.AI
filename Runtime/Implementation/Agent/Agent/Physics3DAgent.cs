@@ -45,8 +45,12 @@ namespace XDay.AI
         {
             m_Navigator.Update(dt);
 
-            var dir = Quaternion.LookRotation(LinearVelocity, Vector3.up);
-            Rotation = Quaternion.RotateTowards(Rotation, dir, MaxAngularSpeed * dt);
+            var vel = LinearVelocity;
+            if (vel != Vector3.zero)
+            {
+                var dir = Quaternion.LookRotation(vel, Vector3.up);
+                Rotation = Quaternion.RotateTowards(Rotation, dir, MaxAngularSpeed * dt);
+            }
 
             UpdateLineDetectors();
         }

@@ -3,10 +3,16 @@ using UnityEngine;
 
 namespace XDay.AI
 {
+    public interface IWorldTicker
+    {
+        void Update(float dt);
+    }
+
     public class WorldCreateInfo
     {
         public IAgentContainerCreateInfo ContainerCreateInfo { get; set; }
         public IObstacleManagerCreateInfo ObstacleManagerCreateInfo { get; set; }
+        public IWorldTicker WorldTicker { get; set; }
     }
 
     public interface IWorld

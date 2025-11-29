@@ -1,3 +1,4 @@
+using RVO;
 using System.Collections.Generic;
 using UnityEngine;
 using XDay.AI;
@@ -16,43 +17,60 @@ public class AgentTest : MonoBehaviour
         m_World = IWorld.Create(new WorldCreateInfo()
         {
             ContainerCreateInfo = new SimpleAgentContainerCreateInfo(),
-            ObstacleManagerCreateInfo = new PhysicsObstacleManagerCreateInfo()
+            ObstacleManagerCreateInfo = new PhysicsObstacleManagerCreateInfo(),
+            WorldTicker = new RVOAgentManager(),
         });
 
         var physicsAgentCreateInfo = new Physics3DAgentCreateInfo()
         {
             Rigidbody = Rigidbody,
-            Position = Me.transform.position
+            Position = Me.transform.position,
+            MaxLinearSpeed = 3f,
+            ColliderRadius = 0.5f,
+            EnableCollision = false,
+            MaxAngularSpeed = 360f,
+            ReachDistance = 0.5f,
         };
         m_Agent = m_World.CreateAgent(physicsAgentCreateInfo);
 
-        var navigator = ISteeringForceNavigator.Create();
-        navigator.SetAgent(m_Agent);
+        {
+            var navigatorSteeringForce = INavigatorSteeringForce.Create();
+            navigatorSteeringForce.SetAgent(m_Agent);
 
-        var seek = ISteeringForceSeek.Create();
-        seek.SetTarget(Target);
-        seek.Enable = false;
-        navigator.AddSteeringForce(seek);
+            var seek = ISteeringForceSeek.Create();
+            seek.SetTarget(Target);
+            seek.Enable = false;
+            navigatorSteeringForce.AddSteeringForce(seek);
 
-        var arrive = ISteeringForceArrive.Create();
-        arrive.SetTarget(Target);
-        arrive.SetSlowDistance(3f);
-        arrive.Enable = true;
-        navigator.AddSteeringForce(arrive);
+            var arrive = ISteeringForceArrive.Create();
+            arrive.SetTarget(Target);
+            arrive.SetSlowDistance(3f);
+            arrive.Enable = false;
+            navigatorSteeringForce.AddSteeringForce(arrive);
 
-        var followPath = ISteeringForceFollowPath.Create();
-        followPath.Enable = false;
-        followPath.SetPath(Path);
-        followPath.SetSlowDistance(3f);
-        followPath.PathMode = PathMode.Loop;
-        navigator.AddSteeringForce(followPath);
+            var followPath = ISteeringForceFollowPath.Create();
+            followPath.Enable = true;
+            followPath.SetPath(Path);
+            followPath.SetSlowDistance(3f);
+            followPath.PathMode = PathMode.Loop;
+            navigatorSteeringForce.AddSteeringForce(followPath);
 
-        var avoidance = ISteeringForceObstacleAvoidance.Create();
-        avoidance.Enable = true;
-        avoidance.AvoidStrength = 30f;
-        navigator.AddSteeringForce(avoidance);
+            var avoidance = ISteeringForceObstacleAvoidance.Create();
+            avoidance.Enable = false;
+            avoidance.AvoidStrength = 30f;
+            navigatorSteeringForce.AddSteeringForce(avoidance);
 
-        m_Agent.Navigator = navigator;
+            m_Agent.Navigator = navigatorSteeringForce;
+        }
+
+        {
+            var navigatorRVO = INavigatorRVO.Create();
+            navigatorRVO.SetAgent(m_Agent);
+            navigatorRVO.SetTarget(Target);
+            navigatorRVO.SetSlowDistance(6);
+
+            m_Agent.Navigator = navigatorRVO;
+        }
 
         m_Agent.AddLineDetector(new LineDetector()
         {

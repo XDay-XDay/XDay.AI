@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RVO;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -10,6 +11,8 @@ namespace XDay.AI
     {
         public World(WorldCreateInfo createInfo)
         {
+            m_WorldTicker = createInfo.WorldTicker;
+
             RegisterContainers();
 
             RegisterAgents();
@@ -26,6 +29,7 @@ namespace XDay.AI
 
         public void Update(float dt)
         {
+            m_WorldTicker?.Update(dt);
             m_Container.Update(dt);
         }
 
@@ -113,6 +117,7 @@ namespace XDay.AI
         private AgentContainerFactory m_ContainerFactory;
         private ObstacleManagerFactory m_ObstacleManagerFactory;
         private readonly IAgentContainer m_Container;
+        private readonly IWorldTicker m_WorldTicker;
         private IObstacleManager m_ObstacleManager;
         private int m_NextID;
     }
