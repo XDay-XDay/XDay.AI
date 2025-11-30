@@ -39,38 +39,38 @@ public class AgentTest : MonoBehaviour
 
             var seek = ISteeringForceSeek.Create();
             seek.SetTarget(Target);
-            seek.Enable = false;
+            seek.Enabled = false;
             navigatorSteeringForce.AddSteeringForce(seek);
 
             var arrive = ISteeringForceArrive.Create();
             arrive.SetTarget(Target);
             arrive.SetSlowDistance(3f);
-            arrive.Enable = false;
+            arrive.Enabled = false;
             navigatorSteeringForce.AddSteeringForce(arrive);
 
             var followPath = ISteeringForceFollowPath.Create();
-            followPath.Enable = true;
+            followPath.Enabled = true;
             followPath.SetPath(Path);
             followPath.SetSlowDistance(3f);
-            followPath.PathMode = PathMode.Loop;
+            followPath.Mode = ISteeringForceFollowPath.PathMode.Loop;
             navigatorSteeringForce.AddSteeringForce(followPath);
 
             var avoidance = ISteeringForceObstacleAvoidance.Create();
-            avoidance.Enable = false;
+            avoidance.Enabled = false;
             avoidance.AvoidStrength = 30f;
             navigatorSteeringForce.AddSteeringForce(avoidance);
 
             m_Agent.Navigator = navigatorSteeringForce;
         }
 
-        {
-            var navigatorRVO = INavigatorRVO.Create();
-            navigatorRVO.SetAgent(m_Agent);
-            navigatorRVO.SetTarget(Target);
-            navigatorRVO.SetSlowDistance(6);
+        //{
+        //    var navigatorRVO = INavigatorRVO.Create();
+        //    navigatorRVO.SetAgent(m_Agent);
+        //    navigatorRVO.SetTarget(Target);
+        //    navigatorRVO.SetSlowDistance(6);
 
-            m_Agent.Navigator = navigatorRVO;
-        }
+        //    m_Agent.Navigator = navigatorRVO;
+        //}
 
         m_Agent.AddLineDetector(new LineDetector()
         {

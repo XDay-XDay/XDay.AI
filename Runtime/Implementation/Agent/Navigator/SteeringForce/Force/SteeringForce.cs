@@ -4,7 +4,8 @@ namespace XDay.AI
 {
     internal abstract class SteeringForce : ISteeringForce
     {
-        public bool Enable { get => m_Enable; set => m_Enable = value; }
+        public bool Enabled { get => m_Enable; set => m_Enable = value; }
+        public float Priority { get => m_Priority; set => m_Priority = Mathf.Max(0, value); }
 
         public abstract Vector3 Calculate(IAgent agent, float dt);
 
@@ -13,5 +14,6 @@ namespace XDay.AI
         }
 
         private bool m_Enable = true;
+        private float m_Priority = 1f;
     }
 }

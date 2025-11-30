@@ -27,11 +27,18 @@ namespace XDay.AI
         public void Update(float dt)
         {
             Vector3 totalForce = Vector3.zero;
+
+            float totalPriority = 0f;
             foreach (var sf in m_SteeringForces)
             {
-                if (sf.Enable)
+                totalPriority += sf.Priority;
+            }
+
+            foreach (var sf in m_SteeringForces)
+            {
+                if (sf.Enabled)
                 {
-                    totalForce += sf.Calculate(m_Agent, dt);
+                    totalForce += sf.Calculate(m_Agent, dt) * (sf.Priority / totalPriority);
                 }
             }
             ClampForce(ref totalForce, m_Agent.MaxLinearAcceleration);

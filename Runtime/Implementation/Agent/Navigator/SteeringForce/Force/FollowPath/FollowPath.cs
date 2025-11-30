@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using XDay.UtilityAPI;
+using static XDay.AI.ISteeringForceFollowPath;
 
 namespace XDay.AI
 {
     internal class SteeringForceFollowPath : SteeringForce, ISteeringForceFollowPath
     {
-        public PathMode PathMode { get => m_PathMode; set => m_PathMode = value; }
+        public PathMode Mode { get => m_PathMode; set => m_PathMode = value; }
 
         public SteeringForceFollowPath()
         {
