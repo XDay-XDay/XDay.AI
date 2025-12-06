@@ -4,35 +4,43 @@ namespace XDay.AI
 {
     internal class SteeringForceSeek : SteeringForce, ISteeringForceSeek
     {
+        public SteeringForceSeek(SteeringForceConfig config) : base(config)
+        {
+        }
+
         public override Vector3 Calculate(IAgent agent, float dt)
         {
+            var target = GetTarget(agent);
+            if (target == null)
+            {
+                return Vector3.zero;
+            }
+
             var curVelocity = agent.LinearVelocity;
-            var targetToMe = GetTarget() - agent.Position;
+            var targetToMe = target.TargetPosition - agent.Position;
+            if (targetToMe == Vector3.zero)
+            {
+                return Vector3.zero;
+            }
             targetToMe.Normalize();
             var desired = targetToMe * agent.MaxLinearAcceleration - curVelocity;
             return desired;
         }
 
-        public void SetTarget(Vector3 position)
+        public void SetOverridenTarget(IAgentTarget target)
         {
-            m_TargetPosition = position;
+            m_OverriddenTarget = target;
         }
 
-        public void SetTarget(Transform target)
+        private IAgentTarget GetTarget(IAgent agent)
         {
-            m_TargetTransform = target;
-        }
-
-        private Vector3 GetTarget()
-        {
-            if (m_TargetTransform == null)
+            if (m_OverriddenTarget == null)
             {
-                return m_TargetPosition;
+                return agent.Target;
             }
-            return m_TargetTransform.position;
+            return m_OverriddenTarget;
         }
 
-        private Vector3 m_TargetPosition;
-        private Transform m_TargetTransform;
+        private IAgentTarget m_OverriddenTarget;
     }
 }

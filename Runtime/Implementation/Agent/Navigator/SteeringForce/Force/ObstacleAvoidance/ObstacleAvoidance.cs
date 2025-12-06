@@ -6,6 +6,12 @@ namespace XDay.AI
     {
         public float AvoidStrength { get => m_AvoidStrength; set => m_AvoidStrength = value; }
 
+        public SteeringForceObstacleAvoidance(SteeringForceConfig config) : base(config)
+        {
+            var cfg = config as ISteeringForceObstacleAvoidance.Config;
+            AvoidStrength = cfg.AvoidStrength;
+        }
+
         public override Vector3 Calculate(IAgent agent, float dt)
         {
             Vector3 avoidanceForce = Vector3.zero;
@@ -14,7 +20,7 @@ namespace XDay.AI
             {
                 detector.Hit = false;
                 var world = agent.World;
-                if (world.Raycast(agent.Position, detector.WorldDirection, detector.Length, 1 << detector.ColliderLayer, out var hitInfo))
+                if (world.Raycast(agent.Position, detector.WorldDirection, detector.Length, detector.CollisionLayerMask, out var hitInfo))
                 {
                     detector.Hit = true;
 

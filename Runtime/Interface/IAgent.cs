@@ -8,7 +8,7 @@ namespace XDay.AI
         public Vector3 LocalDirection { get; set; }
         public Vector3 WorldDirection { get; internal set; }
         public float Length { get; set; }
-        public int ColliderLayer { get; set; }
+        public int CollisionLayerMask { get; set; }
         public bool Hit { get; set; }
     }
 
@@ -22,6 +22,12 @@ namespace XDay.AI
     public interface IAgent
     {
         int ID { get; }
+        /// <summary>
+        /// 数据不再有效,用于对Agent的异步操作时判断Agent是否还存在
+        /// </summary>
+        bool Invalid { get; set; }
+        int CurrentLOD { get; }
+        string Name { get; set; }
         Vector3 Position { get; set; }
         Quaternion Rotation { get; set; }
         Vector3 LinearVelocity { get; set; }
@@ -31,34 +37,51 @@ namespace XDay.AI
         float ReachDistance { get; set; }
         float ReachColliderDistance { get; }
         float ColliderRadius { get; set; }
-        INavigator Navigator { get; set; }
+        INavigator Navigator { get; }
         IWorld World { get; }
+        IAgentTarget Target { get; set; }
+        AgentConfig Config { get; }
+        Vector3 TargetPosition { get; }
+        Vector3 TargetVelocity { get; }
+        /// <summary>
+        /// 可能为空
+        /// </summary>
+        Transform Root { get; }
+
+        void Init();
 
         void OnDestroy();
 
-        void AddForce(Vector3 force, ForceMode mode);
+        void AddForce(Vector3 force, ForceMode mode) { }
 
-        void Update(float dt);
+        void Update(float dt) { }
 
         List<LineDetector> GetLineDetectors();
         void AddLineDetector(LineDetector detector);
         void RemoveLineDetector(int index);
 
+        Vector3 LocalToWorld(Vector3 localPos);
+
         void DrawGizmos();
     }
 
-    public interface IAgentCreateInfo
+    public interface IAgentRenderer
     {
+        IAgent Agent { get; }
+        GameObject GameObject { get; }
+
+        void ChangeLOD(int lod);
+        void Init(IAgent agent);
+        void OnDataChange(IAgentRenderer renderer);
+        void OnDestroy();
+        void SetActive(bool active);
+        void SetGameObject(GameObject gameObject);
     }
 
-    public class Physics3DAgentCreateInfo : IAgentCreateInfo
+    public interface IAgentTarget
     {
-        public UnityEngine.Rigidbody Rigidbody { get; set; }
-        public Vector3 Position { get; set; }
-        public float MaxLinearSpeed { get; set; } = 10f;
-        public float MaxAngularSpeed { get; set; } = 360;
-        public bool EnableCollision { get; set; } = false;
-        public float ReachDistance { get; set; } = 0.5f;
-        public float ColliderRadius { get; set; } = 0.5f;
+        Vector3 TargetPosition { get; set; }
+        Vector3 TargetVelocity { get; }
+        Transform TargetTransform { get; set; }
     }
 }

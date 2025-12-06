@@ -39,10 +39,6 @@ internal class BehaviourTreeTest : MonoBehaviour
         m_Tree1 = Global.RuntimeBehaviourTreeManager.CreateTree(AssetDatabase.GetAssetPath(TreeState), "Test Tree1");
     }
 
-    private void OnDestroy()
-    {
-    }
-
     private void Update()
     {
         m_Tree1?.Tick();

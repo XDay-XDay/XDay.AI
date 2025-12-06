@@ -28,7 +28,7 @@ namespace XDay.AI.Nav
 {
     internal class NavMapRenderer
     {
-        public NavMapRenderer(NavMap navMap)
+        public NavMapRenderer(Map navMap)
         {
             m_NavMap = navMap;
         }
@@ -39,13 +39,13 @@ namespace XDay.AI.Nav
 
         public void Draw()
         {
-            foreach (var area in m_NavMap.Areas)
+            foreach (var area in m_NavMap.Polygons)
             {
                 DrawArea(area);
             }
         }
 
-        private void DrawArea(NavArea area)
+        private void DrawArea(ConvexPolygon area)
         {
             var handleColor = Handles.color;
             var color = GUI.skin.label.normal.textColor;
@@ -68,6 +68,6 @@ namespace XDay.AI.Nav
             Handles.color = handleColor;
         }
 
-        private readonly NavMap m_NavMap;
+        private readonly Map m_NavMap;
     }
 }

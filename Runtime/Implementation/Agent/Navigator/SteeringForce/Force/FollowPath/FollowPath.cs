@@ -9,9 +9,25 @@ namespace XDay.AI
     {
         public PathMode Mode { get => m_PathMode; set => m_PathMode = value; }
 
-        public SteeringForceFollowPath()
+        public SteeringForceFollowPath(SteeringForceConfig config) 
+            : base(config)
         {
-            SetSlowDistance(3);
+            var cfg = config as Config;
+
+            m_OVerriddenTarget = new();
+
+            m_CurrentPathIndex = 0;
+            var arriveConfig = new ISteeringForceArrive.Config()
+            {
+                Enabled = true,
+                Priority = 1f,
+                SlowDistance = cfg.SlowDistance,
+            };
+            m_PassCheck = cfg.PassCheck;
+            m_Arrive = new SteeringForceArrive(arriveConfig);
+            SetSlowDistance(cfg.SlowDistance);
+            Mode = cfg.PathMode;
+            SetPath(cfg.Paths);
         }
 
         public override Vector3 Calculate(IAgent agent, float dt)
@@ -23,37 +39,53 @@ namespace XDay.AI
 
             var force = m_Arrive.Calculate(agent, dt);
 
-            if (m_Arrive.ReachTarget(agent))
+            if (m_Arrive.ReachTarget(agent) || PassCheck(agent))
             {
                 ++m_CurrentPathIndex;
                 if (m_CurrentPathIndex < m_Path.Count)
                 {
-                    m_Arrive.SetTarget(m_Path[m_CurrentPathIndex]);
+                    SetArriveTarget(m_Path[m_CurrentPathIndex]);
                 }
                 else
                 {
                     if (m_PathMode == PathMode.Once)
                     {
                         m_CurrentPathIndex = m_Path.Count - 1;
-                        m_Arrive.SetTarget(m_Path[^1]);
+                        SetArriveTarget(m_Path[^1]);
                     }
                     else if (m_PathMode == PathMode.Loop)
                     {
                         m_CurrentPathIndex = 0;
-                        m_Arrive.SetTarget(m_Path[0]);
+                        SetArriveTarget(m_Path[0]);
                     }
                     else if (m_PathMode == PathMode.PingPong)
                     {
                         m_CurrentPathIndex = 0;
                         Helper.ReverseList(m_Path);
-                        m_Arrive.SetTarget(m_Path[0]);
+                        SetArriveTarget(m_Path[0]);
                     }
                 }
             }
             return force;
         }
 
-        public override void DrawGizmos()
+
+        private bool PassCheck(IAgent agent)
+        {
+            if (m_PassCheck && m_CurrentPathIndex > 0)
+            {
+                var dir = m_Path[m_CurrentPathIndex] - m_Path[m_CurrentPathIndex - 1];
+                var delta = agent.Position - m_Path[m_CurrentPathIndex - 1];
+                var project = Vector3.Project(delta, dir);
+                if (project.sqrMagnitude > dir.sqrMagnitude)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        protected override void OnDrawGizmos(IAgent agent)
         {
             for (var i = 0; i < m_Path.Count - 1; ++i)
             {
@@ -68,7 +100,7 @@ namespace XDay.AI
 
             if (path.Count > 0)
             {
-                m_Arrive.SetTarget(path[0]);
+                SetArriveTarget(path[0]);
             }
         }
 
@@ -77,9 +109,24 @@ namespace XDay.AI
             m_Arrive.SetSlowDistance(distance);
         }
 
+        private void SetArriveTarget(Vector3 position)
+        {
+            m_OVerriddenTarget.TargetPosition = position;
+            m_Arrive.SetOverriddenTarget(m_OVerriddenTarget);
+        }
+
         private int m_CurrentPathIndex;
         private readonly List<Vector3> m_Path = new();
-        private readonly SteeringForceArrive m_Arrive = new();
+        private readonly SteeringForceArrive m_Arrive;
         private PathMode m_PathMode = PathMode.Once;
+        private readonly Target m_OVerriddenTarget;
+        private bool m_PassCheck;
+
+        private class Target : IAgentTarget
+        {
+            public Vector3 TargetPosition { get; set; }
+            public Transform TargetTransform { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+            public Vector3 TargetVelocity => Vector3.zero;
+        }
     }
 }

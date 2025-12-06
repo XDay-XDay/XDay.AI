@@ -27,18 +27,18 @@ using XDay.UtilityAPI;
 
 namespace XDay.AI.Nav
 {
-    public class NavBorder
+    public class Border
     {
-        public int AreaIndex0 = -1;
-        public int AreaIndex1 = -1;
+        public int PolygonIndex0 = -1;
+        public int PolygonIndex1 = -1;
         public int VertexIndex0 = -1;
         public int VertexIndex1 = -1;
     }
 
-    public class NavArea
+    public class ConvexPolygon
     {
-        public int AreaType => m_AreaType;
-        public List<NavBorder> Borders => m_Borders;
+        public int PolygonType => m_PolygonType;
+        public List<Border> Borders => m_Borders;
 #if UNITY_EDITOR
         public List<Vector3> Vertices { get; set; }
         public Vector3[] LoopVertices { get; set; }
@@ -47,49 +47,49 @@ namespace XDay.AI.Nav
         public int Index { get; set; }
 #endif
 
-        public NavArea(int type)
+        public ConvexPolygon(int type)
         {
-            m_AreaType = type;
+            m_PolygonType = type;
         }
 
-        public void AddBorder(NavBorder border)
+        public void AddBorder(Border border)
         {
             m_Borders.Add(border);
         }
 
-        private readonly int m_AreaType;
-        private readonly List<NavBorder> m_Borders = new();
+        private readonly int m_PolygonType;
+        private readonly List<Border> m_Borders = new();
     }
 
-    public partial class NavMap
+    public partial class Map
     {
-        public List<NavArea> Areas => m_Areas;
+        public List<ConvexPolygon> Polygons => m_ConvexPolygons;
 
-        public void Create(List<Vector3> vertices, List<List<int>> areas, List<int> areaTypes)
+        public void Create(List<Vector3> vertices, List<List<int>> convexPolygons, List<int> polygonTypes)
         {
-            Debug.Assert(areas.Count == areaTypes.Count);
+            Debug.Assert(convexPolygons.Count == polygonTypes.Count);
             m_Vertices = vertices;
-            for (var i = 0; i < areas.Count; ++i)
+            for (var i = 0; i < convexPolygons.Count; ++i)
             {
-                var navArea = new NavArea(areaTypes[i]);
-                SetDebugData(navArea, i, areas[i], vertices);
-                m_Areas.Add(navArea);
+                var polygon = new ConvexPolygon(polygonTypes[i]);
+                SetDebugData(polygon, i, convexPolygons[i], vertices);
+                m_ConvexPolygons.Add(polygon);
             }
 
-            var navBorders = CreateNavBorders(areas);
+            var navBorders = CreateBorders(convexPolygons);
 #if UNITY_EDITOR
             m_Borders = navBorders;
 #endif
             foreach (var border in navBorders)
             {
-                m_Areas[border.AreaIndex0].AddBorder(border);
-                m_Areas[border.AreaIndex1].AddBorder(border);
+                m_ConvexPolygons[border.PolygonIndex0].AddBorder(border);
+                m_ConvexPolygons[border.PolygonIndex1].AddBorder(border);
             }
 
             m_Renderer = new NavMapRenderer(this);
         }
 
-        private void SetDebugData(NavArea navArea, int areaIndex, List<int> indices, List<Vector3> vertices)
+        private void SetDebugData(ConvexPolygon polygon, int polygonIndex, List<int> indices, List<Vector3> vertices)
         {
             var verts = new List<Vector3>();
             var loopVerts = new List<Vector3>();
@@ -99,11 +99,11 @@ namespace XDay.AI.Nav
             }
             loopVerts.AddRange(verts);
             loopVerts.Add(verts[0]);
-            navArea.Vertices = vertices;
-            navArea.LoopVertices = loopVerts.ToArray();
-            navArea.VertexIndices = new(indices);
-            navArea.Index = areaIndex;
-            navArea.Center = Helper.CalculateCenter(verts);
+            polygon.Vertices = vertices;
+            polygon.LoopVertices = loopVerts.ToArray();
+            polygon.VertexIndices = new(indices);
+            polygon.Index = polygonIndex;
+            polygon.Center = Helper.CalculateCenter(verts);
         }
 
         public void OnDestroy()
@@ -116,40 +116,40 @@ namespace XDay.AI.Nav
             m_Renderer?.Draw();
         }
 
-        private List<NavBorder> CreateNavBorders(List<List<int>> areas)
+        private List<Border> CreateBorders(List<List<int>> polygons)
         {
-            Dictionary<Vector2Int, NavBorder> navBorders = new();
-            for (var i = 0; i < areas.Count; ++i)
+            Dictionary<Vector2Int, Border> borders = new();
+            for (var i = 0; i < polygons.Count; ++i)
             {
-                var curArea = areas[i];
-                for (var cur = 0; cur < curArea.Count; ++cur)
+                var curPolygon = polygons[i];
+                for (var cur = 0; cur < curPolygon.Count; ++cur)
                 {
-                    var next = (cur + 1) % curArea.Count;
-                    var start = curArea[cur];
-                    var end = curArea[next];
+                    var next = (cur + 1) % curPolygon.Count;
+                    var start = curPolygon[cur];
+                    var end = curPolygon[next];
                     var key = new Vector2Int(Mathf.Min(start, end), Mathf.Max(start, end));
-                    if (navBorders.TryGetValue(key, out var border))
+                    if (borders.TryGetValue(key, out var border))
                     {
-                        border.AreaIndex1 = i;
+                        border.PolygonIndex1 = i;
                     }
                     else
                     {
-                        border = new NavBorder()
+                        border = new Border()
                         {
-                            AreaIndex0 = i,
+                            PolygonIndex0 = i,
                             VertexIndex0 = key.x,
                             VertexIndex1 = key.y,
                         };
-                        navBorders[key] = border;
+                        borders[key] = border;
                     }
                 }
             }
 
-            List<NavBorder> result = new();
-            foreach (var border in navBorders.Values)
+            List<Border> result = new();
+            foreach (var border in borders.Values)
             {
-                if (border.AreaIndex0 >= 0 &&
-                    border.AreaIndex1 >= 0)
+                if (border.PolygonIndex0 >= 0 &&
+                    border.PolygonIndex1 >= 0)
                 {
                     result.Add(border);
                 }
@@ -158,10 +158,10 @@ namespace XDay.AI.Nav
         }
 
         private List<Vector3> m_Vertices;
-        private List<NavArea> m_Areas = new();
+        private readonly List<ConvexPolygon> m_ConvexPolygons = new();
         private NavMapRenderer m_Renderer;
 #if UNITY_EDITOR
-        private List<NavBorder> m_Borders;
+        private List<Border> m_Borders;
 #endif
     }
 }

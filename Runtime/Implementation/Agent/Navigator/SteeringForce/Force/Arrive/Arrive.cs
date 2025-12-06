@@ -5,8 +5,12 @@ namespace XDay.AI
 {
     internal class SteeringForceArrive : SteeringForce, ISteeringForceArrive
     {
-        public SteeringForceArrive()
+        public SteeringForceArrive(SteeringForceConfig config)
+            : base(config)
         {
+            var cfg = config as ISteeringForceArrive.Config;
+            m_SlowDistance = cfg.SlowDistance;
+
             m_DistanceOperator = (distance) =>
             {
                 return distance * distance;
@@ -15,7 +19,13 @@ namespace XDay.AI
 
         public override Vector3 Calculate(IAgent agent, float dt)
         {
-            Vector3 desired = GetTarget() - agent.Position;
+            var target = GetTarget(agent);
+            if (target == null)
+            {
+                return Vector3.zero;
+            }
+
+            Vector3 desired = target.TargetPosition - agent.Position;
             float distance = desired.magnitude;
             if (distance > 0)
             {
@@ -40,44 +50,40 @@ namespace XDay.AI
             m_SlowDistance = distance;
         }
 
-        public void SetTarget(Vector3 position)
-        {
-            m_TargetPosition = position;
-        }
-
-        public void SetTarget(Transform target)
-        {
-            m_TargetTransform = target;
-        }
-
-        private Vector3 GetTarget()
-        {
-            if (m_TargetTransform == null)
-            {
-                return m_TargetPosition;
-            }
-            return m_TargetTransform.position;
-        }
-
         public void SetDistanceOperator(Func<float, float> op)
         {
             m_DistanceOperator = op;
         }
 
+        public void SetOverriddenTarget(IAgentTarget target)
+        {
+            m_OverriddenTarget = target;
+        }
+
         internal bool ReachTarget(IAgent agent)
         {
-            var delta = GetTarget() - agent.Position;
+            var target = GetTarget(agent);
+            var delta = target.TargetPosition - agent.Position;
             var distanceSqr = delta.sqrMagnitude;
             if (distanceSqr <= agent.ReachColliderDistance * agent.ReachColliderDistance)
             {
                 return true;
             }
+
             return false;
         }
 
-        private Vector3 m_TargetPosition;
-        private Transform m_TargetTransform;
+        private IAgentTarget GetTarget(IAgent agent)
+        {
+            if (m_OverriddenTarget == null)
+            {
+                return agent.Target;
+            }
+            return m_OverriddenTarget;
+        }
+
         private float m_SlowDistance;
         private Func<float, float> m_DistanceOperator;
+        private IAgentTarget m_OverriddenTarget;
     }
 }

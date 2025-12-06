@@ -24,26 +24,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 using XDay.UtilityAPI;
-using XDay.WorldAPI.Editor;
 using XDay.WorldAPI.Shape.Editor;
 
 namespace XDay.AI.Nav.Editor
 {
     internal partial class NavigationPlugin
     {
-        private NavMap CreateNavMap()
+        private void CreateNavMap()
         {
             var shapeSystem = World.QueryPlugin<ShapeSystem>();
             if (shapeSystem == null)
             {
-                return null;
+                Debug.LogError("Shape system not found, can't create navmap!");
+                return;
             }
 
             var layer = shapeSystem.GetLayer("Obstacle");
             if (layer == null)
             {
-                Debug.LogError("Obstacle layer not found!");
-                return null;
+                Debug.LogError("Shape \"Obstacle\" layer not found!");
+                return;
             }
 
             List<Vector3> vertices = new();
@@ -70,14 +70,10 @@ namespace XDay.AI.Nav.Editor
                 areaTypes.Add(shape.AreaID);
             }
 
-            var navMap = new NavMap();
+            var navMap = new Map();
             navMap.Create(vertices, areas, areaTypes);
 
-            var plugin = World.QueryPlugin<NavigationPlugin>();
-            plugin.SetNavMap(navMap);
-            WorldEditor.SelectedPluginIndex = World.QueryPluginIndex(plugin);
-
-            return navMap;
+            SetNavMap(navMap);
         }
 
         private int AddVertex(Vector3 pos, List<Vector3> vertices)

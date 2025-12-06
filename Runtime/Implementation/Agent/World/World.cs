@@ -1,26 +1,43 @@
-﻿using RVO;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using XDay.AssetAPI;
 using XDay.UtilityAPI;
 
 namespace XDay.AI
 {
     internal class World : IWorld
     {
+        public event Action<IAgent> EventCreateAgent;
+        public event Action<IAgent> EventRemoveAgent;
+        public event Action<IAgent> EventUpdateAgent;
+        public event Action<IAgent> EventShowAgent;
+        public event Action<IAgent> EventHideAgent;
+        public event Action<IAgent, int, int> EventChangeAgentLOD;
+        public IAssetLoader AssetLoader => m_AssetLoader;
+
         public World(WorldCreateInfo createInfo)
         {
             m_WorldTicker = createInfo.WorldTicker;
+            m_AssetLoader = createInfo.AssetLoader;
 
-            RegisterContainers();
+            RegisterAgentContainers();
+
+            RegisterAgentRendererContainers();
 
             RegisterAgents();
 
             RegisterObstacleManagers();
 
-            m_Container = m_ContainerFactory.CreateAgentContainer(createInfo.ContainerCreateInfo);
+            RegisterNavigators();
+
+            RegisterWorldCullers();
+
+            m_AgentContainer = m_AgentContainerFactory.CreateAgentContainer(createInfo.ContainerCreateInfo);
             m_ObstacleManager = m_ObstacleManagerFactory.CreateObstacleManager(createInfo.ObstacleManagerCreateInfo);
+            m_WorldCuller = m_WorldCullerFactory.CreateWorldCuller(createInfo.WorldCullerCreateInfo);
+            m_AgentRendererContainer = m_AgentRendererContainerFactory.CreateAgentRendererContainer(createInfo.RendererContainerCreateInfo, this);
         }
 
         public void OnDestroy()
@@ -29,25 +46,31 @@ namespace XDay.AI
 
         public void Update(float dt)
         {
+            m_WorldCuller.Update(dt);
             m_WorldTicker?.Update(dt);
-            m_Container.Update(dt);
+            m_AgentContainer.Update(dt);
+            m_AgentRendererContainer.Update(dt);
         }
 
-        public IAgent CreateAgent(IAgentCreateInfo createInfo)
+        public IAgent CreateAgent(AgentConfig config, Vector3 position)
         {
-            var agent = m_AgentFactory.CreateAgent(++m_NextID, createInfo, this);
-            m_Container.Add(agent);
+            var agent = m_AgentFactory.CreateAgent(++m_NextID, config, this, position);
+            agent.Init();
+            m_AgentContainer.Add(agent);
+
+            EventCreateAgent?.Invoke(agent);
+
             return agent;
         }
 
         public IAgent GetAgent(int id)
         {
-            return m_Container.GetAgent(id);
+            return m_AgentContainer.GetAgent(id);
         }
 
         public void QueryAgents(float minX, float minY, float maxX, float maxY, List<IAgent> outAgents)
         {
-            m_Container.QueryAgents(minX, minY, maxX, maxY, outAgents);
+            m_AgentContainer.QueryAgents(minX, minY, maxX, maxY, outAgents);
         }
 
         public void RemoveAgent(IAgent agent)
@@ -56,8 +79,21 @@ namespace XDay.AI
             {
                 return;
             }
-            m_Container.Remove(agent.ID);
+
+            EventRemoveAgent?.Invoke(agent);
+
+            m_AgentContainer.Remove(agent.ID);
             agent.OnDestroy();
+        }
+
+        public bool Raycast(Vector3 position, Vector3 direction, float length, int layerMask, out HitInfo hitInfo)
+        {
+            return m_ObstacleManager.Raycast(position, direction, length, layerMask, out hitInfo);
+        }
+
+        public INavigator CreateNavigator(NavigatorConfig config, IAgent agent)
+        {
+            return m_AgentNavigatorFactory.CreateAgentNavigator(config, agent);
         }
 
         private void RegisterAgents()
@@ -68,26 +104,58 @@ namespace XDay.AI
             foreach (var type in agentTypes)
             {
                 var attribute = type.GetCustomAttribute<AgentLabel>();
-                m_AgentFactory.RegisterCreator(attribute.CreateInfoType, (id, createInfo, world) =>
+                m_AgentFactory.RegisterCreator(attribute.ConfigType, (id, createInfo, world, position) =>
                 {
-                    object[] constructorArgs = { id, createInfo, world };
+                    object[] constructorArgs = { id, createInfo, world, position };
                     return Activator.CreateInstance(type, constructorArgs) as IAgent;
                 });
             }
         }
 
-        private void RegisterContainers()
+        private void RegisterAgentContainers()
         {
-            m_ContainerFactory = new();
+            m_AgentContainerFactory = new();
 
             var agentContainerTypes = Helper.GetClassesWithAttribute<AgentContainerLabel>();
             foreach (var type in agentContainerTypes)
             {
                 var attribute = type.GetCustomAttribute<AgentContainerLabel>();
-                m_ContainerFactory.RegisterCreator(attribute.CreateInfoType, (createInfo) =>
+                m_AgentContainerFactory.RegisterCreator(attribute.CreateInfoType, (createInfo) =>
                 {
                     object[] constructorArgs = { createInfo };
                     return Activator.CreateInstance(type, constructorArgs) as IAgentContainer;
+                });
+            }
+        }
+
+        private void RegisterAgentRendererContainers()
+        {
+            m_AgentRendererContainerFactory = new();
+
+            var types = Helper.GetClassesWithAttribute<AgentRendererContainerLabel>();
+            foreach (var type in types)
+            {
+                var attribute = type.GetCustomAttribute<AgentRendererContainerLabel>();
+                m_AgentRendererContainerFactory.RegisterCreator(attribute.CreateInfoType, (createInfo, world) =>
+                {
+                    object[] constructorArgs = { createInfo, world };
+                    return Activator.CreateInstance(type, constructorArgs) as IAgentRendererContainer;
+                });
+            }
+        }
+
+        private void RegisterNavigators()
+        {
+            m_AgentNavigatorFactory = new();
+
+            var naviagorTypes = Helper.GetClassesWithAttribute<AgentNavigatorLabel>();
+            foreach (var type in naviagorTypes)
+            {
+                var attribute = type.GetCustomAttribute<AgentNavigatorLabel>();
+                m_AgentNavigatorFactory.RegisterCreator(attribute.ConfigType, (config, agent) =>
+                {
+                    object[] constructorArgs = { config, agent };
+                    return Activator.CreateInstance(type, constructorArgs) as INavigator;
                 });
             }
         }
@@ -108,17 +176,40 @@ namespace XDay.AI
             }
         }
 
-        public bool Raycast(Vector3 position, Vector3 direction, float length, int layerMask, out HitInfo hitInfo)
+        private void RegisterWorldCullers()
         {
-            return m_ObstacleManager.Raycast(position, direction, length, layerMask, out hitInfo);
+            m_WorldCullerFactory = new();
+
+            var worldCullerTypes = Helper.GetClassesWithAttribute<WorldCullerLabel>();
+            foreach (var type in worldCullerTypes)
+            {
+                var attribute = type.GetCustomAttribute<WorldCullerLabel>();
+                m_WorldCullerFactory.RegisterCreator(attribute.CreateInfoType, (createInfo) =>
+                {
+                    object[] constructorArgs = { createInfo };
+                    return Activator.CreateInstance(type, constructorArgs) as IWorldCuller;
+                });
+            }
+        }
+
+        public void GetAllAgents(List<IAgent> allAgents)
+        {
+            allAgents.Clear();
+            allAgents.AddRange(m_AgentContainer.GetAgents());
         }
 
         private AgentFactory m_AgentFactory;
-        private AgentContainerFactory m_ContainerFactory;
+        private AgentContainerFactory m_AgentContainerFactory;
+        private AgentRendererContainerFactory m_AgentRendererContainerFactory;
         private ObstacleManagerFactory m_ObstacleManagerFactory;
-        private readonly IAgentContainer m_Container;
+        private WorldCullerFactory m_WorldCullerFactory;
+        private AgentNavigatorFactory m_AgentNavigatorFactory;
+        private readonly IAgentContainer m_AgentContainer;
+        private readonly IAgentRendererContainer m_AgentRendererContainer;
         private readonly IWorldTicker m_WorldTicker;
-        private IObstacleManager m_ObstacleManager;
+        private readonly IWorldCuller m_WorldCuller;
+        private readonly IObstacleManager m_ObstacleManager;
         private int m_NextID;
+        private IAssetLoader m_AssetLoader;
     }
 }

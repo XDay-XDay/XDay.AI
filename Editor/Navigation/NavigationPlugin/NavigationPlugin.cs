@@ -75,7 +75,7 @@ namespace XDay.AI.Nav.Editor
             m_Renderer.CreateNavMeshRenderer(m_LastBuiltResult);
         }
 
-        public void SetNavMap(NavMap navMap)
+        public void SetNavMap(Map navMap)
         {
             m_NavMap?.OnDestroy();
 
@@ -138,6 +138,8 @@ namespace XDay.AI.Nav.Editor
             };
             m_LastBuiltResult = builder.BuildNavMesh(setting);
             m_Renderer.CreateNavMeshRenderer(m_LastBuiltResult);
+
+            CreateNavMap();
         }
 
         public void ClearNavMesh()
@@ -273,7 +275,7 @@ namespace XDay.AI.Nav.Editor
         private PathFinderGizmo m_PathFinder = new();
         //private MyNavigationSystem m_NavigationSystem;
         private NavMeshBuildResult m_LastBuiltResult;
-        private NavMap m_NavMap;
+        private Map m_NavMap;
         private NavMeshBuildSettings m_BuildParam = new()
         {
             overrideTileSize = false,

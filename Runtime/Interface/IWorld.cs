@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
+using XDay.AssetAPI;
 
 namespace XDay.AI
 {
@@ -10,13 +12,24 @@ namespace XDay.AI
 
     public class WorldCreateInfo
     {
+        public IAssetLoader AssetLoader { get; set; }
         public IAgentContainerCreateInfo ContainerCreateInfo { get; set; }
+        public IAgentRendererContainerCreateInfo RendererContainerCreateInfo { get; set; }
         public IObstacleManagerCreateInfo ObstacleManagerCreateInfo { get; set; }
+        public IWorldCullerCreateInfo WorldCullerCreateInfo { get; set; }
         public IWorldTicker WorldTicker { get; set; }
     }
 
     public interface IWorld
     {
+        public event Action<IAgent> EventCreateAgent;
+        public event Action<IAgent> EventRemoveAgent;
+        public event Action<IAgent> EventUpdateAgent;
+        public event Action<IAgent> EventShowAgent;
+        public event Action<IAgent> EventHideAgent;
+        public event Action<IAgent, int, int> EventChangeAgentLOD;
+        public IAssetLoader AssetLoader { get; }
+
         static IWorld Create(WorldCreateInfo createInfo)
         {
             return new World(createInfo); 
@@ -26,9 +39,10 @@ namespace XDay.AI
 
         void Update(float deltaTime);
 
-        IAgent CreateAgent(IAgentCreateInfo createInfo);
+        IAgent CreateAgent(AgentConfig config, Vector3 position);
         void RemoveAgent(IAgent agent);
         IAgent GetAgent(int id);
+        void GetAllAgents(List<IAgent> allAgents);
 
         /// <summary>
         /// query agents in rectangle range
@@ -41,5 +55,7 @@ namespace XDay.AI
         void QueryAgents(float minX, float minY, float maxX, float maxY, List<IAgent> outAgents);
 
         bool Raycast(Vector3 position, Vector3 direction, float length, int layerMask, out HitInfo hitInfo);
+
+        INavigator CreateNavigator(NavigatorConfig config, IAgent agent);
     }
 }

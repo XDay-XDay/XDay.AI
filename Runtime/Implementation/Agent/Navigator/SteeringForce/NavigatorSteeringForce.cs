@@ -1,17 +1,28 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using XDay.UtilityAPI;
+using System;
 
 namespace XDay.AI
 {
+    [AgentNavigatorLabel(typeof(NavigatorSteeringForceConfig))]
     internal class NavigatorSteeringForce : INavigatorSteeringForce
     {
-        public void OnDestroy()
+        public NavigatorSteeringForce(NavigatorSteeringForceConfig config, IAgent agent)
         {
+            SetAgent(agent);
+
+            foreach (var sfc in config.ForceConfigs)
+            {
+                var label = Helper.GetClassAttribute<SteeringForceLabel>(sfc.GetType());
+                object[] constructorArgs = { sfc };
+                var force = Activator.CreateInstance(label.ForceType, constructorArgs) as ISteeringForce;
+                AddSteeringForce(force);
+            }
         }
 
-        public void SetAgent(IAgent agent)
+        public void OnDestroy()
         {
-            m_Agent = agent;
         }
 
         public void AddSteeringForce(ISteeringForce sf)
@@ -49,7 +60,7 @@ namespace XDay.AI
         {
             foreach (var sf in m_SteeringForces)
             {
-                sf.DrawGizmos();
+                sf.DrawGizmos(m_Agent);
             }
         }
 
@@ -61,6 +72,11 @@ namespace XDay.AI
                 len = Mathf.Sqrt(len);
                 totalForce *= maxAcceleration / len;
             }
+        }
+
+        private void SetAgent(IAgent agent)
+        {
+            m_Agent = agent;
         }
 
         private IAgent m_Agent;

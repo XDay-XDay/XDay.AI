@@ -1,7 +1,9 @@
-using RVO;
+using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using XDay.AI;
+using XDay.AssetAPI;
 
 #if UNITY_EDITOR
 
@@ -9,7 +11,6 @@ public class AgentTest : MonoBehaviour
 {
     public Transform Target;
     public Transform Me;
-    public Rigidbody Rigidbody;
     public List<Vector3> Path;
 
     private void Start()
@@ -17,81 +18,44 @@ public class AgentTest : MonoBehaviour
         m_World = IWorld.Create(new WorldCreateInfo()
         {
             ContainerCreateInfo = new SimpleAgentContainerCreateInfo(),
+            RendererContainerCreateInfo = new AsyncAgentRendererContainerCreateInfo(),
             ObstacleManagerCreateInfo = new PhysicsObstacleManagerCreateInfo(),
+            WorldCullerCreateInfo = new TopDownViewWorldCullerCreateInfo(),
             WorldTicker = new RVOAgentManager(),
+            AssetLoader = IAssetLoader.CreateDefault(),
         });
 
-        var physicsAgentCreateInfo = new Physics3DAgentCreateInfo()
-        {
-            Rigidbody = Rigidbody,
-            Position = Me.transform.position,
-            MaxLinearSpeed = 3f,
-            ColliderRadius = 0.5f,
-            EnableCollision = false,
-            MaxAngularSpeed = 360f,
-            ReachDistance = 0.5f,
-        };
-        m_Agent = m_World.CreateAgent(physicsAgentCreateInfo);
+        m_Target = new AgentTarget(Target);
 
-        {
-            var navigatorSteeringForce = INavigatorSteeringForce.Create();
-            navigatorSteeringForce.SetAgent(m_Agent);
+        CreateSteeringForceAgent(Vector3.zero);
+        CreateRVOAgent(Vector3.zero);
+        CreateRVOAgent(new Vector3(0, 0, 3));
 
-            var seek = ISteeringForceSeek.Create();
-            seek.SetTarget(Target);
-            seek.Enabled = false;
-            navigatorSteeringForce.AddSteeringForce(seek);
+        CreateFog();
+    }
 
-            var arrive = ISteeringForceArrive.Create();
-            arrive.SetTarget(Target);
-            arrive.SetSlowDistance(3f);
-            arrive.Enabled = false;
-            navigatorSteeringForce.AddSteeringForce(arrive);
+    private void CreateFog()
+    {
+        //m_FogSystem = new FogSystem();
+    }
 
-            var followPath = ISteeringForceFollowPath.Create();
-            followPath.Enabled = true;
-            followPath.SetPath(Path);
-            followPath.SetSlowDistance(3f);
-            followPath.Mode = ISteeringForceFollowPath.PathMode.Loop;
-            navigatorSteeringForce.AddSteeringForce(followPath);
+    private void CreateSteeringForceAgent(Vector3 position)
+    {
+        AgentConfig config = AssetDatabase.LoadAssetAtPath<Physics3DAgentConfig>("Assets/Game/Packages/XDayUnity.AI/Test/AgentTest/SteeringForceAgent.asset");
 
-            var avoidance = ISteeringForceObstacleAvoidance.Create();
-            avoidance.Enabled = false;
-            avoidance.AvoidStrength = 30f;
-            navigatorSteeringForce.AddSteeringForce(avoidance);
+        var agent = m_World.CreateAgent(config, position);
+        m_Agents.Add(agent);
 
-            m_Agent.Navigator = navigatorSteeringForce;
-        }
+        agent.Target = m_Target;
+    }
 
-        //{
-        //    var navigatorRVO = INavigatorRVO.Create();
-        //    navigatorRVO.SetAgent(m_Agent);
-        //    navigatorRVO.SetTarget(Target);
-        //    navigatorRVO.SetSlowDistance(6);
+    private void CreateRVOAgent(Vector3 position)
+    {
+        AgentConfig config = AssetDatabase.LoadAssetAtPath<Physics3DAgentConfig>("Assets/Game/Packages/XDayUnity.AI/Test/AgentTest/RVOAgent.asset");
 
-        //    m_Agent.Navigator = navigatorRVO;
-        //}
-
-        m_Agent.AddLineDetector(new LineDetector()
-        {
-            ColliderLayer = 0,
-            Length = 5,
-            LocalDirection = Vector3.forward,
-        });
-
-        m_Agent.AddLineDetector(new LineDetector()
-        {
-            ColliderLayer = 0,
-            Length = 2,
-            LocalDirection = Quaternion.Euler(0, 45, 0) * Vector3.forward,
-        });
-
-        m_Agent.AddLineDetector(new LineDetector()
-        {
-            ColliderLayer = 0,
-            Length = 2,
-            LocalDirection = Quaternion.Euler(0, -45, 0) * Vector3.forward,
-        });
+        var agent = m_World.CreateAgent(config, position);
+        m_Agents.Add(agent);
+        agent.Target = m_Target;
     }
 
     private void OnDestroy()
@@ -102,16 +66,58 @@ public class AgentTest : MonoBehaviour
     private void Update()
     {
         m_World.Update(Time.deltaTime);
+
+        //m_FogSystem.Update(Time.deltaTime);
+
+        //if (Input.GetKeyUp(KeyCode.Space))
+        //{
+        //    m_FogSystem.OpenRectangle(FogDataType.Client, 4, 4, 40, 40);
+        //}
+
+        //if (Input.GetKeyUp(KeyCode.Return))
+        //{
+        //    m_FogSystem.OpenRectangle(FogDataType.Client, 40, 40, 60, 60);
+        //}
+
+        //int sightRange = 16;
+        //foreach (var agent in m_Agents)
+        //{
+        //    var centerCoord = m_FogSystem.PositionToCoord(agent.Position);
+        //    var minX = centerCoord.x - sightRange / 2;
+        //    var minY = centerCoord.y - sightRange / 2;
+        //    var maxX = centerCoord.x + sightRange / 2;
+        //    var maxY = centerCoord.y + sightRange / 2;
+        //    m_FogSystem.OpenCircle(FogDataType.Client, minX, minY, maxX, maxY, false);
+        //}
     }
 
     private void OnDrawGizmos()
     {
-        m_Agent?.Navigator?.DrawGizmos();
-        m_Agent?.DrawGizmos();
+        foreach (var agent in m_Agents)
+        {
+            agent?.Navigator?.DrawGizmos();
+            agent?.DrawGizmos();
+        }
     }
 
+    private IAgentTarget m_Target;
     private IWorld m_World;
-    private IAgent m_Agent;
+    private readonly List<IAgent> m_Agents = new();
+    //private FogSystem m_FogSystem;
+}
+
+class AgentTarget : IAgentTarget
+{
+    public Vector3 TargetPosition { get => m_Transform.position; set => m_Transform.position = value; }
+    public Transform TargetTransform { get => m_Transform; set => m_Transform = value; }
+    public Vector3 TargetVelocity => Vector3.zero;
+
+    public AgentTarget(Transform transform)
+    {
+        m_Transform = transform;
+    }
+
+    private Transform m_Transform;
 }
 
 #endif

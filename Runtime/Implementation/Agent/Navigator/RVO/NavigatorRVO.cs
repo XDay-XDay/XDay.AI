@@ -4,14 +4,19 @@ using UnityEngine;
 
 namespace XDay.AI
 {
+    [AgentNavigatorLabel(typeof(NavigatorRVOConfig))]
     internal class NavigatorRVO : INavigatorRVO
     {
-        public NavigatorRVO()
+        public NavigatorRVO(NavigatorRVOConfig config, IAgent agent)
         {
+            SetAgent(agent);
+
             m_DistanceOperator = (distance) =>
             {
                 return distance * distance;
             };
+
+            SetSlowDistance(config.SlowDistance);
         }
 
         public void OnDestroy()
@@ -20,20 +25,18 @@ namespace XDay.AI
             m_RVOAgentID = -1;
         }
 
-        public void SetAgent(IAgent agent)
-        {
-            Debug.Assert(agent != null, "Agent is null");
-            m_Agent = agent;
-            m_RVOAgentID = Simulator.Instance.addAgent(ToVector2(agent.Position), agent.MaxLinearSpeed, agent.ColliderRadius, ToVector2(agent.LinearVelocity));
-        }
-
         public void Update(float dt)
         {
             var simulator = Simulator.Instance;
             m_Agent.Position = ToVector3(simulator.getAgentPosition(m_RVOAgentID));
 
-            Vector3 desired = GetTarget() - m_Agent.Position;
-            float distance = desired.magnitude;
+            Vector3 desired = Vector3.zero;
+            float distance = 0;
+            if (m_Agent.Target != null)
+            {
+                desired = m_Agent.TargetPosition - m_Agent.Position;
+                distance = desired.magnitude;
+            }
             if (distance > 0)
             {
                 desired.Normalize();
@@ -64,25 +67,6 @@ namespace XDay.AI
             m_SlowDistance = distance;
         }
 
-        public void SetTarget(Vector3 position)
-        {
-            m_TargetPosition = position;
-        }
-
-        public void SetTarget(Transform target)
-        {
-            m_TargetTransform = target;
-        }
-
-        private Vector3 GetTarget()
-        {
-            if (m_TargetTransform == null)
-            {
-                return m_TargetPosition;
-            }
-            return m_TargetTransform.position;
-        }
-
         public void SetDistanceOperator(Func<float, float> op)
         {
             m_DistanceOperator = op;
@@ -98,9 +82,14 @@ namespace XDay.AI
             return new RVO.Vector2(pos.x, pos.z);
         }
 
+        private void SetAgent(IAgent agent)
+        {
+            Debug.Assert(agent != null, "Agent is null");
+            m_Agent = agent;
+            m_RVOAgentID = Simulator.Instance.addAgent(ToVector2(agent.Position), agent.MaxLinearSpeed, agent.ColliderRadius, ToVector2(agent.LinearVelocity));
+        }
+
         private int m_RVOAgentID = -1;
-        private Vector3 m_TargetPosition;
-        private Transform m_TargetTransform;
         private float m_SlowDistance = 3f;
         private Func<float, float> m_DistanceOperator;
         private IAgent m_Agent;
