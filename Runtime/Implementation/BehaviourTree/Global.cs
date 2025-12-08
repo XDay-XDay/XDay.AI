@@ -21,13 +21,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using XDay.AssetAPI;
+using XDay.WorldAPI;
 
 namespace XDay.AI.BT
 {
     public static class Global
     {
-        public static void InitRuntime(IAssetLoader loader, string globalVarPath)
+        public static void InitRuntime(IWorldAssetLoader loader, string globalVarPath)
         {
             RuntimeBehaviourTreeManager = new(loader);
 

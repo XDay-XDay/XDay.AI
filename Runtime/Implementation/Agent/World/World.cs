@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
-using XDay.AssetAPI;
 using XDay.UtilityAPI;
+using XDay.WorldAPI;
 
 namespace XDay.AI
 {
@@ -15,7 +15,7 @@ namespace XDay.AI
         public event Action<IAgent> EventShowAgent;
         public event Action<IAgent> EventHideAgent;
         public event Action<IAgent, int, int> EventChangeAgentLOD;
-        public IAssetLoader AssetLoader => m_AssetLoader;
+        public IWorldAssetLoader AssetLoader => m_AssetLoader;
 
         public World(WorldCreateInfo createInfo)
         {
@@ -210,6 +210,6 @@ namespace XDay.AI
         private readonly IWorldCuller m_WorldCuller;
         private readonly IObstacleManager m_ObstacleManager;
         private int m_NextID;
-        private IAssetLoader m_AssetLoader;
+        private IWorldAssetLoader m_AssetLoader;
     }
 }

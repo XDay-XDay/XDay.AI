@@ -26,7 +26,6 @@
 using UnityEditor;
 using UnityEngine;
 using XDay.AI.BT;
-using XDay.AssetAPI;
 using XDay.UtilityAPI;
 
 internal class BehaviourTreeTest : MonoBehaviour
@@ -35,7 +34,7 @@ internal class BehaviourTreeTest : MonoBehaviour
 
     private void Start()
     {
-        Global.InitRuntime(IAssetLoader.CreateDefault(), EditorHelper.QueryAssetFilePath<VariableManagerState>());
+        Global.InitRuntime(new XDay.WorldAPI.EditorWorldAssetLoader(), EditorHelper.QueryAssetFilePath<VariableManagerState>());
         m_Tree1 = Global.RuntimeBehaviourTreeManager.CreateTree(AssetDatabase.GetAssetPath(TreeState), "Test Tree1");
     }
 

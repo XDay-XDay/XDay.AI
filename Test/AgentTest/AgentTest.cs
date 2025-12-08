@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using XDay.AI;
-using XDay.AssetAPI;
 
 #if UNITY_EDITOR
 
@@ -22,7 +20,7 @@ public class AgentTest : MonoBehaviour
             ObstacleManagerCreateInfo = new PhysicsObstacleManagerCreateInfo(),
             WorldCullerCreateInfo = new TopDownViewWorldCullerCreateInfo(),
             WorldTicker = new RVOAgentManager(),
-            AssetLoader = IAssetLoader.CreateDefault(),
+            AssetLoader = new XDay.WorldAPI.EditorWorldAssetLoader(),
         });
 
         m_Target = new AgentTarget(Target);

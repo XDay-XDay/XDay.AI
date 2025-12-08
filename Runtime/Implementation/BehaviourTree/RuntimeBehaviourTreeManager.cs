@@ -22,7 +22,7 @@
  */
 
 using System.Collections.Generic;
-using XDay.AssetAPI;
+using XDay.WorldAPI;
 
 namespace XDay.AI.BT
 {
@@ -30,7 +30,7 @@ namespace XDay.AI.BT
     {
         public SortedDictionary<int, BehaviourTree> Trees => m_Trees;
 
-        public RuntimeBehaviourTreeManager(IAssetLoader assetLoader)
+        public RuntimeBehaviourTreeManager(IWorldAssetLoader assetLoader)
         {
             m_AssetLoader = assetLoader;
             m_NextTreeID = 0;
@@ -60,7 +60,7 @@ namespace XDay.AI.BT
             }
         }
 
-        private readonly IAssetLoader m_AssetLoader;
+        private readonly IWorldAssetLoader m_AssetLoader;
         private int m_NextTreeID;
         private readonly SortedDictionary<int, BehaviourTree> m_Trees;
     }
