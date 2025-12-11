@@ -34,7 +34,7 @@ internal class BehaviourTreeTest : MonoBehaviour
 
     private void Start()
     {
-        Global.InitRuntime(new XDay.WorldAPI.EditorWorldAssetLoader(), EditorHelper.QueryAssetFilePath<VariableManagerState>());
+        Global.InitRuntime(new AssetLoader(), EditorHelper.QueryAssetFilePath<VariableManagerState>());
         m_Tree1 = Global.RuntimeBehaviourTreeManager.CreateTree(AssetDatabase.GetAssetPath(TreeState), "Test Tree1");
     }
 

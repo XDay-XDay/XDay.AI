@@ -20,7 +20,7 @@ public class AgentTest : MonoBehaviour
             ObstacleManagerCreateInfo = new PhysicsObstacleManagerCreateInfo(),
             WorldCullerCreateInfo = new TopDownViewWorldCullerCreateInfo(),
             WorldTicker = new RVOAgentManager(),
-            AssetLoader = new XDay.WorldAPI.EditorWorldAssetLoader(),
+            AssetLoader = new AssetLoader(),
         });
 
         m_Target = new AgentTarget(Target);
@@ -28,13 +28,6 @@ public class AgentTest : MonoBehaviour
         CreateSteeringForceAgent(Vector3.zero);
         CreateRVOAgent(Vector3.zero);
         CreateRVOAgent(new Vector3(0, 0, 3));
-
-        CreateFog();
-    }
-
-    private void CreateFog()
-    {
-        //m_FogSystem = new FogSystem();
     }
 
     private void CreateSteeringForceAgent(Vector3 position)
@@ -64,29 +57,6 @@ public class AgentTest : MonoBehaviour
     private void Update()
     {
         m_World.Update(Time.deltaTime);
-
-        //m_FogSystem.Update(Time.deltaTime);
-
-        //if (Input.GetKeyUp(KeyCode.Space))
-        //{
-        //    m_FogSystem.OpenRectangle(FogDataType.Client, 4, 4, 40, 40);
-        //}
-
-        //if (Input.GetKeyUp(KeyCode.Return))
-        //{
-        //    m_FogSystem.OpenRectangle(FogDataType.Client, 40, 40, 60, 60);
-        //}
-
-        //int sightRange = 16;
-        //foreach (var agent in m_Agents)
-        //{
-        //    var centerCoord = m_FogSystem.PositionToCoord(agent.Position);
-        //    var minX = centerCoord.x - sightRange / 2;
-        //    var minY = centerCoord.y - sightRange / 2;
-        //    var maxX = centerCoord.x + sightRange / 2;
-        //    var maxY = centerCoord.y + sightRange / 2;
-        //    m_FogSystem.OpenCircle(FogDataType.Client, minX, minY, maxX, maxY, false);
-        //}
     }
 
     private void OnDrawGizmos()
@@ -101,7 +71,6 @@ public class AgentTest : MonoBehaviour
     private IAgentTarget m_Target;
     private IWorld m_World;
     private readonly List<IAgent> m_Agents = new();
-    //private FogSystem m_FogSystem;
 }
 
 class AgentTarget : IAgentTarget

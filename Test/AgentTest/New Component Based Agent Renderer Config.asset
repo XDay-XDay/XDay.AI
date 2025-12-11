@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: New Component Based Agent Renderer Config
   m_EditorClassIdentifier: 
   Components:
-  - rid: 2760580222082351171
+  - rid: 8295174466309193797
   references:
     version: 2
     RefIds:
-    - rid: 2760580222082351171
-      type: {class: CustomModel1ComponentConfig, ns: XDay.AI, asm: Assembly-CSharp}
+    - rid: 8295174466309193797
+      type: {class: ModelComponentConfig, ns: XDay.AI, asm: XDayUnity.AI}
       data:
         Prefab: {fileID: 6018929521635407614, guid: 2b007ffc2ad742548b7164ffd1c92477, type: 3}
