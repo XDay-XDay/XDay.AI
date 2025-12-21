@@ -48,6 +48,11 @@ namespace XDay.AI
         public void Update(float dt)
         {
             m_CommandQueue.Update(dt);
+
+            foreach (var renderer in m_Renderers.Values)
+            {
+                renderer.Update(dt);
+            }
         }
 
         public T GetRenderer<T>(int agentID) where T : IAgentRenderer

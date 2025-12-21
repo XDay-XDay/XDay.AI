@@ -30,7 +30,7 @@ namespace XDay.AI
             return deleted;
         }
 
-        protected abstract void OnInspectorGUI();
+        protected virtual void OnInspectorGUI() { }
 #endif
     }
 }

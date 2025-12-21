@@ -10,6 +10,7 @@ namespace XDay.AI
         IAgent GetAgent(int id);
         void QueryAgents(float minX, float minY, float maxX, float maxY, List<IAgent> outAgents);
         void Update(float dt);
+        void FixedUpdate();
     }
 
     public interface IAgentContainerCreateInfo

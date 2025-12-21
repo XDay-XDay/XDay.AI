@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using XDay.UtilityAPI;
+using XDay.UtilityAPI.Editor;
 
 namespace XDay.AI.Editor
 {
@@ -11,6 +12,11 @@ namespace XDay.AI.Editor
     /// </summary>
     internal class ComponentBasedAgentRendererEditor
     {
+        public ComponentBasedAgentRendererEditor(AIEditor editor)
+        {
+            m_Editor = editor;
+        }
+
         public void OnEnable()
         {
             Refresh();
@@ -18,21 +24,6 @@ namespace XDay.AI.Editor
 
         public void OnGUI()
         {
-            EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Refresh"))
-            {
-                Refresh();
-            }
-            if (GUILayout.Button("Save"))
-            {
-                Save();
-            }
-            if (GUILayout.Button("Remove Invalid"))
-            {
-                RemoveInvalid();
-            }
-            EditorGUILayout.EndHorizontal();
-
             DrawRendererConfigs();
 
             EditorGUI.indentLevel++;
@@ -48,7 +39,7 @@ namespace XDay.AI.Editor
             EditorGUILayout.EndScrollView();
         }
 
-        private void Refresh()
+        public void Refresh()
         {
             GetRendererConfigNames();
             GetComponentTypeNames();
@@ -66,8 +57,11 @@ namespace XDay.AI.Editor
             {
                 if (config.Components[i] == null)
                 {
-                    config.Components.RemoveAt(i);
-                    break;
+                    var old = GUI.color;
+                    GUI.color = Color.red;
+                    EditorGUILayout.LabelField($"{i}. Invalid Component");
+                    GUI.color = old;
+                    continue;
                 }
 
                 var deleted = config.Components[i].InspectorGUI(i);
@@ -94,9 +88,46 @@ namespace XDay.AI.Editor
             {
                 EditorHelper.PingObject(config);
             }
+
+            if (GUILayout.Button("选中使用者", GUILayout.MaxWidth(80)))
+            {
+                m_Editor.SelectFirstUseAgentConfig(config);
+            }
+
+            if (GUILayout.Button("重命名", GUILayout.MaxWidth(60)))
+            {
+                Rename(config);
+            }
+
             EditorGUILayout.EndHorizontal();
             EditorGUIUtility.labelWidth = 0;
             SetActiveConfig(newIndex);
+        }
+
+        private void Rename(ComponentBasedAgentRendererConfig config)
+        {
+            var path = AssetDatabase.GetAssetPath(config);
+            var parameters = new List<ParameterWindow.Parameter>()
+            {
+                new ParameterWindow.StringParameter("Name", "", $"{Helper.GetPathName(path, false)}"),
+            };
+            ParameterWindow.Open("重命名", parameters, (p) =>
+            {
+                var ok = ParameterWindow.GetString(p[0], out var name);
+                if (ok)
+                {
+                    var error = AssetDatabase.RenameAsset(path, name);
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        Debug.LogError(error);
+                    }
+                    else
+                    {
+                        Refresh();
+                    }
+                }
+                return ok;
+            });
         }
 
         private void DrawComponentTypes()
@@ -154,7 +185,7 @@ namespace XDay.AI.Editor
             return null;
         }
 
-        private void Save()
+        public void Save()
         {
             if (m_ActiveConfigIndex >= 0 && m_ActiveConfigIndex < m_Configs.Count)
             {
@@ -163,17 +194,22 @@ namespace XDay.AI.Editor
             }
         }
 
-        private void RemoveInvalid()
+        public void RemoveInvalid()
         {
+            var removed = false;
             var config = GetActiveConfig();
             for (var i = config.Components.Count - 1; i >= 0; i--)
             {
                 if (config.Components[i] == null)
                 {
                     config.Components.RemoveAt(i);
+                    removed = true;
                 }
             }
-            Save();
+            if (removed)
+            {
+                Save();
+            }
         }
 
         private void GetComponentTypeNames()
@@ -204,7 +240,7 @@ namespace XDay.AI.Editor
             m_RendererConfigNames = new string[m_Configs.Count];
             for (var i = 0; i < m_Configs.Count; i++)
             {
-                m_RendererConfigNames[i] = $"{m_Configs[i].name}-{m_Configs[i].GetInstanceID()}";
+                m_RendererConfigNames[i] = $"{i}. {m_Configs[i].name}";
             }
 
             if (m_Configs.Count == 0)
@@ -217,6 +253,12 @@ namespace XDay.AI.Editor
             }
         }
 
+        internal void SetActiveAgentRendererConfig(ComponentBasedAgentRendererConfig config)
+        {
+            Refresh();
+            SetActiveConfig(m_Configs.IndexOf(config));
+        }
+
         private int m_ActiveConfigIndex = -1;
         private int m_SelectedComponentIndex = -1;
         private string[] m_ComponentTypeNames;
@@ -224,5 +266,6 @@ namespace XDay.AI.Editor
         private Type[] m_ComponentConfigTypes;
         private List<ComponentBasedAgentRendererConfig> m_Configs = new();
         private Vector2 m_ScrollPos;
+        private AIEditor m_Editor;
     }
 }

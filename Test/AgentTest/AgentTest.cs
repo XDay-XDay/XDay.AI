@@ -1,38 +1,63 @@
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using XDay.AI;
-
-#if UNITY_EDITOR
+using Cysharp.Threading.Tasks;
+using XDay.Asset;
+using Game.Asset;
 
 public class AgentTest : MonoBehaviour
 {
     public Transform Target;
     public Transform Me;
     public List<Vector3> Path;
+    public Canvas Canvas;
 
-    private void Start()
+    private async UniTaskVoid Start()
     {
+        Application.targetFrameRate = 60;
+        QualitySettings.vSyncCount = 0;
+
+        var assteLoader = new RuntimeAssetLoader();
+        await assteLoader.InitASync();
+
         m_World = IWorld.Create(new WorldCreateInfo()
         {
             ContainerCreateInfo = new SimpleAgentContainerCreateInfo(),
             RendererContainerCreateInfo = new AsyncAgentRendererContainerCreateInfo(),
             ObstacleManagerCreateInfo = new PhysicsObstacleManagerCreateInfo(),
             WorldCullerCreateInfo = new TopDownViewWorldCullerCreateInfo(),
-            WorldTicker = new RVOAgentManager(),
-            AssetLoader = new AssetLoader(),
+            //WorldTicker = new RVOAgentManager(),
+            WorldTicker = null,
+            AssetLoader = assteLoader,
         });
 
         m_Target = new AgentTarget(Target);
 
-        CreateSteeringForceAgent(Vector3.zero);
-        CreateRVOAgent(Vector3.zero);
-        CreateRVOAgent(new Vector3(0, 0, 3));
+        //for (var i = 0; i < 20; ++i)
+        //{
+        //    CreateSteeringForceAgent(Vector3.zero);
+        //}
+
+        CreateCharacterControllerAgent(Vector3.zero);
+
+        //CreateRVOAgent(Vector3.zero);
+        //CreateRVOAgent(new Vector3(0, 0, 3));
+
+        //var obj = await AssetManager.LoadGameObjectAsync("Assets/Game/Res/UI/Window/Login/UILoginWindow.prefab");
+        //obj.transform.SetParent(Canvas.transform, false);
+    }
+
+    private void CreateCharacterControllerAgent(Vector3 position)
+    {
+        AgentConfig config = AssetManager.Load<CharacterControllerAgentConfig>("Assets/Game/Packages/XDayUnity.AI/Test/AgentTest/Character Controller Agent.asset");
+
+        var agent = m_World.CreateAgent(config, position);
+        m_Agents.Add(agent);
     }
 
     private void CreateSteeringForceAgent(Vector3 position)
     {
-        AgentConfig config = AssetDatabase.LoadAssetAtPath<Physics3DAgentConfig>("Assets/Game/Packages/XDayUnity.AI/Test/AgentTest/SteeringForceAgent.asset");
+        AgentConfig config = AssetManager.Load<RigidBodyAgentConfig>("Assets/Game/Packages/XDayUnity.AI/Test/AgentTest/SteeringForceAgent.asset");
 
         var agent = m_World.CreateAgent(config, position);
         m_Agents.Add(agent);
@@ -42,7 +67,7 @@ public class AgentTest : MonoBehaviour
 
     private void CreateRVOAgent(Vector3 position)
     {
-        AgentConfig config = AssetDatabase.LoadAssetAtPath<Physics3DAgentConfig>("Assets/Game/Packages/XDayUnity.AI/Test/AgentTest/RVOAgent.asset");
+        AgentConfig config = AssetManager.Load<RigidBodyAgentConfig>("Assets/Game/Res/RVOAgent.asset");
 
         var agent = m_World.CreateAgent(config, position);
         m_Agents.Add(agent);
@@ -51,12 +76,20 @@ public class AgentTest : MonoBehaviour
 
     private void OnDestroy()
     {
-        m_World.OnDestroy();
+        m_World?.OnDestroy();
     }
 
     private void Update()
     {
+        if (m_World == null)
+        {
+            return;
+        }
         m_World.Update(Time.deltaTime);
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            var obj = AssetManager.LoadGameObject("Assets/Game/Res/UI/Window/Login/UILoginWindow.prefab");
+        }
     }
 
     private void OnDrawGizmos()
@@ -87,4 +120,3 @@ class AgentTarget : IAgentTarget
     private Transform m_Transform;
 }
 
-#endif

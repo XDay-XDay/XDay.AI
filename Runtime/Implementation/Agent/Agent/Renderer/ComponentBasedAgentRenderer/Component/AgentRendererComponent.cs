@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace XDay.AI
 {
@@ -25,9 +26,15 @@ namespace XDay.AI
             m_Renderer = null;
         }
 
+        internal void Update(float dt)
+        {
+            OnUpdate(dt);
+        }
+
         protected abstract void OnInit();
         protected virtual void OnPostInit() { }
         protected abstract void OnDestroy();
+        protected virtual void OnUpdate(float dt) { }
 
         internal virtual void OnGameObjectChanged(GameObject oldGameObject, GameObject gameObject)
         {

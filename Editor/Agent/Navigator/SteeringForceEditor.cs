@@ -18,21 +18,6 @@ namespace XDay.AI.Editor
 
         public void OnGUI()
         {
-            EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Refresh"))
-            {
-                Refresh();
-            }
-            if (GUILayout.Button("Save"))
-            {
-                Save();
-            }
-            if (GUILayout.Button("Remove Invalid"))
-            {
-                RemoveInvalid();
-            }
-            EditorGUILayout.EndHorizontal();
-
             DrawNavigatorConfigs();
 
             EditorGUI.indentLevel++;
@@ -48,7 +33,7 @@ namespace XDay.AI.Editor
             EditorGUILayout.EndScrollView();
         }
 
-        private void Refresh()
+        public void Refresh()
         {
             GetNavigatorConfigNames();
             GetForceTypeNames();
@@ -64,6 +49,15 @@ namespace XDay.AI.Editor
 
             for (var i = 0; i < navigatorConfig.ForceConfigs.Count; ++i)
             {
+                if (navigatorConfig.ForceConfigs[i] == null)
+                {
+                    var old = GUI.color;
+                    GUI.color = Color.red;
+                    EditorGUILayout.LabelField($"{i}. Invalid Force Config");
+                    GUI.color = old;
+                    continue;
+                }
+
                 var deleted = navigatorConfig.ForceConfigs[i].InspectorGUI(i);
                 if (deleted)
                 {
@@ -148,7 +142,7 @@ namespace XDay.AI.Editor
             return null;
         }
 
-        private void Save()
+        public void Save()
         {
             if (m_ActiveConfigIndex >= 0 && m_ActiveConfigIndex < m_Configs.Count)
             {
@@ -198,7 +192,7 @@ namespace XDay.AI.Editor
             }
         }
 
-        private void RemoveInvalid()
+        public void RemoveInvalid()
         {
             var config = GetActiveConfig();
             for (var i = config.ForceConfigs.Count - 1; i >= 0; i--)

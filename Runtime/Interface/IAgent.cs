@@ -32,7 +32,7 @@ namespace XDay.AI
         Quaternion Rotation { get; set; }
         Vector3 LinearVelocity { get; set; }
         float MaxLinearAcceleration { get; set; }
-        float MaxLinearSpeed { get; }
+        float MaxLinearHorizontalSpeed { get; }
         float MaxAngularSpeed { get; }
         float ReachDistance { get; set; }
         float ReachColliderDistance { get; }
@@ -53,8 +53,10 @@ namespace XDay.AI
         void OnDestroy();
 
         void AddForce(Vector3 force, ForceMode mode) { }
+        void Stop();
 
         void Update(float dt) { }
+        void FixedUpdate() { }
 
         List<LineDetector> GetLineDetectors();
         void AddLineDetector(LineDetector detector);
@@ -63,6 +65,13 @@ namespace XDay.AI
         Vector3 LocalToWorld(Vector3 localPos);
 
         void DrawGizmos();
+    }
+
+    public interface ICharacterControllerAgent : IAgent
+    {
+        bool IsGrounded { get; }
+        bool MoveByForce { get; }
+        CharacterController Controller { get; }
     }
 
     public interface IAgentRenderer
@@ -74,6 +83,7 @@ namespace XDay.AI
         void Init(IAgent agent);
         void OnDataChange(IAgentRenderer renderer);
         void OnDestroy();
+        void Update(float dt);
         void SetActive(bool active);
         void SetGameObject(GameObject gameObject);
     }

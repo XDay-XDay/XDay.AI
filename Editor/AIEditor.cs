@@ -21,7 +21,29 @@ namespace XDay.AI.Editor
 
         private void OnGUI()
         {
+            EditorGUILayout.BeginHorizontal();
+
             m_SelectedTabIndex = GUILayout.Toolbar(m_SelectedTabIndex, m_TabNames);
+
+            EditorGUILayout.Space();
+
+            if (GUILayout.Button("Save", GUILayout.MaxWidth(40)))
+            {
+                SaveAll();
+            }
+
+            if (GUILayout.Button("Refresh", GUILayout.MaxWidth(60)))
+            {
+                RefreshAll();
+            }
+
+            if (GUILayout.Button("Remove Invalid", GUILayout.MaxWidth(100)))
+            {
+                RemoveInvalidAll();
+            }
+
+            EditorGUILayout.EndHorizontal();
+
             EditorHelper.HorizontalLine();
 
             switch (m_SelectedTabIndex)
@@ -45,15 +67,37 @@ namespace XDay.AI.Editor
             }
         }
 
+        private void RemoveInvalidAll()
+        {
+            RemoveInvalidAgentTab();
+            RemoveInvalidNavigatorTab();
+        }
+
+        private void RefreshAll()
+        {
+            RefreshAgentTab();
+            RefreshNavigatorTab();
+
+            RemoveInvalidAll();
+        }
+
+        private void SaveAll()
+        {
+            RemoveInvalidAll();
+
+            SaveAgentTab();
+            SaveNavigatorTab();
+        }
+
         private int m_SelectedTabIndex = 0;
-        private string[] m_TabNames = new string[]
+        private readonly string[] m_TabNames = new string[]
         {
             "Agent",
             "Navigator",
             "World",
         };
-        private const int AgentTab = 0;
-        private const int NavigatorTab = 1;
-        private const int WorldTab = 2;
+        public const int AgentTab = 0;
+        public const int NavigatorTab = 1;
+        public const int WorldTab = 2;
     }
 }

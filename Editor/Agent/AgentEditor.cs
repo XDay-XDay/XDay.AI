@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEditor;
-using UnityEditorInternal;
 using UnityEngine;
 using XDay.UtilityAPI;
 
@@ -11,6 +11,11 @@ namespace XDay.AI.Editor
     /// </summary>
     internal class AgentEditor
     {
+        public AgentEditor(AIEditor editor)
+        {
+            m_Editor = editor;
+        }
+
         public void OnEnable()
         {
             Refresh();
@@ -18,138 +23,306 @@ namespace XDay.AI.Editor
 
         public void OnGUI()
         {
-            EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Refresh"))
-            {
-                Refresh();
-            }
-            if (GUILayout.Button("Save"))
-            {
-                Save();
-            }
-            EditorGUILayout.EndHorizontal();
+            DrawGroups();
 
-            DrawAgentConfigs();
+            DrawActiveGroup();
+        }
+
+        private void DrawActiveGroup()
+        {
+            var group = GetActiveGroup();
+            if (group == null)
+            {
+                return;
+            }
 
             EditorGUI.indentLevel++;
 
-            EditorHelper.HorizontalLine();
+            EditorHelper.HorizontalLine(Color.white);
+
+            group.ConfigCreateFolder = EditorHelper.ObjectField<DefaultAsset>("Agent Config Folder", group.ConfigCreateFolder, 0, null, "创建Config时默认输出目录");
+            group.RendererCreateFolder = EditorHelper.ObjectField<DefaultAsset>("Agent Renderer Folder", group.RendererCreateFolder, 0, null, "创建Renderer时默认输出目录");
+            EditorGUILayout.BeginHorizontal();
+            group.CreateRendererConfig = EditorGUILayout.Toggle(new GUIContent("Create Render Config", "创建Config时同时也创建一个RendererConfig"), group.CreateRendererConfig);
+            group.DeleteRendererConfig = EditorGUILayout.Toggle(new GUIContent("Delete Render Config", "删除Config时同时也删除RendererConfig"), group.DeleteRendererConfig);
+            EditorGUILayout.EndHorizontal();
+
+            EditorHelper.HorizontalLine(Color.yellow);
 
             m_ScrollPos = EditorGUILayout.BeginScrollView(m_ScrollPos);
 
-            DrawActiveConfig();
+            var idx = 0;
+            var breakLoop = false;
+            foreach (var config in group.Configs)
+            {
+                if (config == null)
+                {
+                    var old = GUI.color;
+                    GUI.color = Color.red;
+                    EditorGUILayout.LabelField($"{idx}. Invalid Agent Config");
+                    GUI.color = old;
+                    continue;
+                }
+                EditorGUI.BeginChangeCheck();
+
+                config.InspectorGUI(idx, out var selectRenderer, out var ping, out var deleted, out var copyPath);
+
+                if (copyPath)
+                {
+                    EditorGUIUtility.systemCopyBuffer = AssetDatabase.GetAssetPath(config);
+                }
+
+                if (deleted)
+                {
+                    if (group.DeleteRendererConfig && config.Renderer != null)
+                    {
+                        FileUtil.DeleteFileOrDirectory(AssetDatabase.GetAssetPath(config.Renderer));
+                    }
+                    FileUtil.DeleteFileOrDirectory(AssetDatabase.GetAssetPath(config));
+                    group.Configs.Remove(config);
+                    breakLoop = true;
+                    AssetDatabase.Refresh();
+                }
+
+                if (selectRenderer)
+                {
+                    if (config.Renderer is ComponentBasedAgentRendererConfig r)
+                    {
+                        m_Editor.SetAgentTab(AIEditor.AgentComponentBasedRendererTab);
+                        m_Editor.SetActiveAgentRendererConfig(config.Renderer);
+                    }
+                    else
+                    {
+                        Debug.Assert(false, "todo");
+                    }
+                }
+
+                if (ping)
+                {
+                    EditorHelper.PingObject(config);
+                }
+
+                EditorHelper.HorizontalLine(Color.green);
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    if (config != null)
+                    {
+                        EditorUtility.SetDirty(config);
+                    }
+                    EditorUtility.SetDirty(group);
+                }
+
+                ++idx;
+
+                if (breakLoop)
+                {
+                    break;
+                }
+            }
 
             EditorGUI.indentLevel--;
 
             EditorGUILayout.EndScrollView();
         }
 
-        private void DrawActiveConfig()
+        public void Refresh()
         {
-            var config = GetActiveConfig();
-            if (config == null)
-            {
-                return;
-            }
-            
-            config.Name = EditorGUILayout.TextField("Name", config.Name);
-            config.MaxLinearSpeed = EditorGUILayout.FloatField("Max Linear Speed", config.MaxLinearSpeed);
-            config.MaxAngularSpeed = EditorGUILayout.FloatField("Max Angular Speed", config.MaxAngularSpeed);
-            config.ReachDistance = EditorGUILayout.FloatField("Reach Distance", config.ReachDistance);
-            config.ColliderRadius = EditorGUILayout.FloatField("Reach Distance", config.ColliderRadius);
-            config.Renderer = EditorGUILayout.ObjectField("Renderer", config.Renderer, typeof(AgentRendererConfig), false) as AgentRendererConfig;
-            config.Navigator = EditorGUILayout.ObjectField("Navigator", config.Navigator, typeof(NavigatorConfig), false) as NavigatorConfig;
-            EditorHelper.DrawList("Line Detectors", config.LineDetectors, (lineDetector, index) =>
-            {
-                lineDetector.EulerAngle = EditorGUILayout.Vector3Field($"{index}. Direction", lineDetector.EulerAngle);
-                lineDetector.Length = EditorGUILayout.FloatField("Length", lineDetector.Length);
-                lineDetector.CollisionLayerMask = EditorGUILayout.MaskField(new GUIContent("Collision Layer"), lineDetector.CollisionLayerMask, InternalEditorUtility.layers);
-            });
-
-            if (config.GetType() == typeof(Physics3DAgentConfig))
-            {
-                var c = config as Physics3DAgentConfig;
-                c.EnableCollision = EditorGUILayout.Toggle("Enable Collision", c.EnableCollision);
-            }
-            else
-            {
-                Debug.Assert(false, $"todo: {config.GetType()}");
-            }
+            GetAgentGroupNames();
+            GetAgentConfigTypes();
         }
 
-        private void Refresh()
+        private void DrawGroups()
         {
-            GetAgentConfigNames();
-        }
-
-        private void DrawAgentConfigs()
-        {
-            var agentConfig = GetActiveConfig();
-            if (agentConfig == null)
+            var group = GetActiveGroup();
+            if (group == null)
             {
                 return;
             }
 
             EditorGUIUtility.labelWidth = 110;
             EditorGUILayout.BeginHorizontal();
-            var newIndex = EditorGUILayout.Popup("Agent Configs", m_ActiveConfigIndex, m_AgentConfigNames);
+            var newIndex = EditorGUILayout.Popup("Groups", m_ActiveGroupIndex, m_AgentConfigGroupNames);
+
+            m_ActiveRendererTypeIndex = EditorGUILayout.Popup("Renderer", m_ActiveRendererTypeIndex, m_AgentRendererConfigNames);
+
+            EditorGUILayout.Space();
+
+            if (GUILayout.Button("+", GUILayout.MaxWidth(20)))
+            {
+                CreateAgentConfigContextMenu();
+            }
+
             if (GUILayout.Button("=>", GUILayout.MaxWidth(30)))
             {
-                EditorHelper.PingObject(agentConfig);
+                EditorHelper.PingObject(group);
             }
             EditorGUILayout.EndHorizontal();
             EditorGUIUtility.labelWidth = 0;
-            SetActiveConfig(newIndex);
+            SetActiveGroup(newIndex);
         }
 
-        private void SetActiveConfig(int index)
+        private void CreateAgentConfigContextMenu()
         {
-            if (m_ActiveConfigIndex != index)
+            var group = GetActiveGroup();
+            if (group == null)
             {
-                m_ActiveConfigIndex = index;
+                return;
+            }
+
+            if (string.IsNullOrEmpty(group.ConfigCreateFolder))
+            {
+                Debug.LogError($"{group.GroupName}没有设置config创建目录");
+                return;
+            }
+            if (group.CreateRendererConfig)
+            {
+                if (string.IsNullOrEmpty(group.RendererCreateFolder))
+                {
+                    Debug.LogError($"{group.GroupName}没有设置renderer创建目录");
+                    return;
+                }
+
+                if (m_ActiveRendererTypeIndex < 0 || m_ActiveRendererTypeIndex >= m_AgentRendererConfigTypes.Count)
+                {
+                    return;
+                }
+            }
+
+            var contextMenu = new GenericMenu();
+
+            foreach (var type in m_AgentConfigTypes)
+            {
+                contextMenu.AddItem(new GUIContent(type.Name), false, () =>
+                {
+                    var group = GetActiveGroup();
+                    if (group != null)
+                    {
+                        var agentConfig = ScriptableObject.CreateInstance(type) as AgentConfig;
+                        var name = $"{type.Name}-{UnityEngine.Random.Range(0, int.MaxValue)}";
+                        agentConfig.Name = name;
+
+                        if (group.CreateRendererConfig)
+                        {
+                            var rendererConfig = ScriptableObject.CreateInstance(m_AgentRendererConfigTypes[m_ActiveRendererTypeIndex]) as AgentRendererConfig;
+                            AssetDatabase.CreateAsset(rendererConfig, $"{group.RendererCreateFolder}/{name}_Renderer.asset");
+                            agentConfig.Renderer = rendererConfig;
+                        }
+
+                        AssetDatabase.CreateAsset(agentConfig, $"{group.ConfigCreateFolder}/{name}.asset");
+                        group.Configs.Add(agentConfig);
+
+                        EditorUtility.SetDirty(group);
+                        Save();
+                    }
+                });
+            }
+            contextMenu.ShowAsContext();
+        }
+
+        private void SetActiveGroup(int index)
+        {
+            if (m_ActiveGroupIndex != index)
+            {
+                m_ActiveGroupIndex = index;
             }
         }
 
-        private AgentConfig GetActiveConfig()
+        private AgentConfigGroup GetActiveGroup()
         {
-            if (m_ActiveConfigIndex >= 0 && m_ActiveConfigIndex <= m_Configs.Count)
+            if (m_ActiveGroupIndex >= 0 && m_ActiveGroupIndex <= m_Groups.Count)
             {
-                return m_Configs[m_ActiveConfigIndex];
+                return m_Groups[m_ActiveGroupIndex];
             }
             return null;
         }
 
-        private void Save()
+        public void RemoveInvalid()
         {
-            if (m_ActiveConfigIndex >= 0 && m_ActiveConfigIndex < m_Configs.Count)
+            var config = GetActiveGroup();
+            for (var i = config.Configs.Count - 1; i >= 0; i--)
             {
-                EditorUtility.SetDirty(m_Configs[m_ActiveConfigIndex]);
-                AssetDatabase.SaveAssets();
+                if (config.Configs[i] == null)
+                {
+                    config.Configs.RemoveAt(i);
+                }
+            }
+            Save();
+        }
+
+        public void Save()
+        {
+            var group = GetActiveGroup();
+            if (group != null)
+            {
+                EditorUtility.SetDirty(group);
+            }
+            AssetDatabase.SaveAssets();
+        }
+
+        private void GetAgentConfigTypes()
+        {
+            m_AgentConfigTypes = Helper.GetAllSubclasses(typeof(AgentConfig));
+            m_AgentRendererConfigTypes = Helper.GetAllSubclasses(typeof(AgentRendererConfig));
+
+            m_AgentRendererConfigNames = new string[m_AgentRendererConfigTypes.Count];
+            for (var i = 0; i < m_AgentRendererConfigNames.Length; ++i)
+            {
+                m_AgentRendererConfigNames[i] = m_AgentRendererConfigTypes[i].Name;
+            }
+
+            if (m_AgentRendererConfigTypes.Count > 0)
+            {
+                m_ActiveRendererTypeIndex = 0;
             }
         }
 
-        private void GetAgentConfigNames()
+        private void GetAgentGroupNames()
         {
-            m_Configs = EditorHelper.QueryAssets<AgentConfig>();
-            m_AgentConfigNames = new string[m_Configs.Count];
-            for (var i = 0; i < m_Configs.Count; i++)
+            m_Groups = EditorHelper.QueryAssets<AgentConfigGroup>();
+            m_AgentConfigGroupNames = new string[m_Groups.Count];
+            for (var i = 0; i < m_Groups.Count; i++)
             {
-                m_AgentConfigNames[i] = $"{m_Configs[i].name}-{m_Configs[i].GetInstanceID()}";
+                m_AgentConfigGroupNames[i] = $"{i}.{m_Groups[i].name}";
             }
 
-            if (m_Configs.Count == 0)
+            if (m_Groups.Count == 0)
             {
-                SetActiveConfig(-1);
+                SetActiveGroup(-1);
             }
-            else if (m_ActiveConfigIndex < 0 || m_ActiveConfigIndex >= m_Configs.Count)
+            else if (m_ActiveGroupIndex < 0 || m_ActiveGroupIndex >= m_Groups.Count)
             {
-                SetActiveConfig(0);
+                SetActiveGroup(0);
             }
         }
 
-        private int m_ActiveConfigIndex = -1;
-        private string[] m_AgentConfigNames;
-        private List<AgentConfig> m_Configs = new();
+        internal void SelectFirstUseAgentConfig(ComponentBasedAgentRendererConfig rendererConfig)
+        {
+            var groupIdx = 0;
+            foreach (var group in m_Groups)
+            {
+                for (var i = 0; i < group.Configs.Count; ++i)
+                {
+                    var config = group.Configs[i];
+                    if (config.Renderer is ComponentBasedAgentRendererConfig c && c == rendererConfig)
+                    {
+                        Debug.Log($"使用者:{i}. {config.ConfigID}-{config.Name}");
+                        SetActiveGroup(groupIdx);
+                        break;
+                    }
+                }
+                ++groupIdx;
+            }
+        }
+
+        private int m_ActiveGroupIndex = -1;
+        private int m_ActiveRendererTypeIndex = -1;
+        private string[] m_AgentConfigGroupNames;
+        private string[] m_AgentRendererConfigNames;
+        private List<AgentConfigGroup> m_Groups = new();
         private Vector2 m_ScrollPos;
+        private List<Type> m_AgentConfigTypes = new();
+        private List<Type> m_AgentRendererConfigTypes = new();
+        private AIEditor m_Editor;
     }
 }

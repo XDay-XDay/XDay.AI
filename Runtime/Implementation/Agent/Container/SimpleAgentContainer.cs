@@ -57,6 +57,14 @@ namespace XDay.AI
             }
         }
 
+        public void FixedUpdate()
+        {
+            foreach (var agent in m_Agents.Values)
+            {
+                agent.FixedUpdate();
+            }
+        }
+
         private readonly Dictionary<int, IAgent> m_Agents = new();
     }
 }

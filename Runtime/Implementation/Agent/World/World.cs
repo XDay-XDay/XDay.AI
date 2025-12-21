@@ -52,6 +52,11 @@ namespace XDay.AI
             m_AgentRendererContainer.Update(dt);
         }
 
+        public void FixedUpdate()
+        {
+            m_AgentContainer.FixedUpdate();
+        }
+
         public IAgent CreateAgent(AgentConfig config, Vector3 position)
         {
             var agent = m_AgentFactory.CreateAgent(++m_NextID, config, this, position);

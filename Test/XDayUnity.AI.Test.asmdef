@@ -9,7 +9,8 @@
         "BEPUphysics",
         "FixedMath",
         "XDay",
-        "XDayUnity.AI"
+        "XDayUnity.AI",
+        "XDayUnity.Asset"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -52,7 +52,7 @@ namespace XDay.AI
                     totalForce += sf.Calculate(m_Agent, dt) * (sf.Priority / totalPriority);
                 }
             }
-            ClampForce(ref totalForce, m_Agent.MaxLinearAcceleration);
+            Helper.Clamp(ref totalForce, m_Agent.MaxLinearAcceleration);
             m_Agent.AddForce(totalForce, ForceMode.Acceleration);
         }
 
@@ -61,16 +61,6 @@ namespace XDay.AI
             foreach (var sf in m_SteeringForces)
             {
                 sf.DrawGizmos(m_Agent);
-            }
-        }
-
-        private void ClampForce(ref Vector3 totalForce, float maxAcceleration)
-        {
-            var len = totalForce.sqrMagnitude;
-            if (len > maxAcceleration * maxAcceleration)
-            {
-                len = Mathf.Sqrt(len);
-                totalForce *= maxAcceleration / len;
             }
         }
 

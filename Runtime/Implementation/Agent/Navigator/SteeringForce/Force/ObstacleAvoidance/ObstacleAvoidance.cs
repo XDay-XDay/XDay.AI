@@ -16,19 +16,23 @@ namespace XDay.AI
         {
             Vector3 avoidanceForce = Vector3.zero;
 
-            foreach (var detector in agent.GetLineDetectors())
+            var detectors = agent.GetLineDetectors();
+            if (detectors != null)
             {
-                detector.Hit = false;
-                var world = agent.World;
-                if (world.Raycast(agent.Position, detector.WorldDirection, detector.Length, detector.CollisionLayerMask, out var hitInfo))
+                foreach (var detector in detectors)
                 {
-                    detector.Hit = true;
+                    detector.Hit = false;
+                    var world = agent.World;
+                    if (world.Raycast(agent.Position, detector.WorldDirection, detector.Length, detector.CollisionLayerMask, out var hitInfo))
+                    {
+                        detector.Hit = true;
 
-                    Vector3 avoidDirection = hitInfo.Normal;
-                    avoidDirection.Normalize();
+                        Vector3 avoidDirection = hitInfo.Normal;
+                        avoidDirection.Normalize();
 
-                    float distanceFactor = (detector.Length - hitInfo.Distance) / detector.Length;
-                    avoidanceForce += distanceFactor * m_AvoidStrength * avoidDirection;
+                        float distanceFactor = (detector.Length - hitInfo.Distance) / detector.Length;
+                        avoidanceForce += distanceFactor * m_AvoidStrength * avoidDirection;
+                    }
                 }
             }
 

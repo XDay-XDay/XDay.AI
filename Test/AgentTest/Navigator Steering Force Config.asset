@@ -1,5 +1,5 @@
 %YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
+%TAG !u! tag:yousandi.cn,2023:
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -57,3 +57,4 @@ MonoBehaviour:
       data:
         Enabled: 1
         Priority: 1
+        ThreatDistance: 5

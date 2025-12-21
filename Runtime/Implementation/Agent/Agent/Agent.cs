@@ -11,7 +11,8 @@ namespace XDay.AI
         public abstract Vector3 Position { get; set; }
         public abstract Quaternion Rotation { get; set; }
         public abstract Vector3 LinearVelocity { get; set; }
-        public abstract float MaxLinearSpeed { get; set; }
+        public abstract float MaxLinearHorizontalSpeed { get; set; }
+        public abstract float MaxLinearVerticalSpeed { get; set; }
         public abstract float MaxAngularSpeed { get; set; }
         public abstract Transform Root { get; }
         public virtual bool Invalid { get => m_Invalid; set => m_Invalid = value; }
@@ -54,6 +55,7 @@ namespace XDay.AI
             m_ColliderRadius = config.ColliderRadius;
             m_World = world;
             m_Config = config;
+            m_MaxLinearAcceleration = config.MaxLinearAcceleration;
 
             foreach (var lineDetector in config.LineDetectors)
             {
@@ -85,9 +87,10 @@ namespace XDay.AI
 
         public virtual void Update(float dt)
         {
-            m_Navigator.Update(dt);
+            m_Navigator?.Update(dt);
 
             var vel = LinearVelocity;
+            vel.y = 0;
             if (vel != Vector3.zero)
             {
                 var dir = Quaternion.LookRotation(vel, Vector3.up);
@@ -95,6 +98,10 @@ namespace XDay.AI
             }
 
             UpdateLineDetectors();
+        }
+
+        public virtual void FixedUpdate()
+        {
         }
 
         public List<LineDetector> GetLineDetectors()
@@ -137,6 +144,10 @@ namespace XDay.AI
         {
         }
 
+        public virtual void Stop()
+        {
+        }
+
         public Vector3 LocalToWorld(Vector3 localPos)
         {
             var forward = Rotation * Vector3.forward;
@@ -160,7 +171,7 @@ namespace XDay.AI
         private IAgentTarget m_Target;
         private float m_ReachDistance = 0.5f;
         private float m_ColliderRadius = 0.5f;
-        private float m_MaxLinearAcceleration = 5f;
+        private float m_MaxLinearAcceleration = 100f;
         private bool m_Invalid = false;
         private readonly AgentConfig m_Config;
         private readonly List<LineDetector> m_LineDetectors = new();

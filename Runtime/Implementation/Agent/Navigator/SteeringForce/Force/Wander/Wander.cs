@@ -20,7 +20,7 @@ namespace XDay.AI
             Vector3 wanderPoint = circleCenter + new Vector3(wanderX, 0, wanderZ);
 
             Vector3 worldWanderPoint = agent.LocalToWorld(wanderPoint);
-            Vector3 desiredVelocity = (worldWanderPoint - agent.Position).normalized * agent.MaxLinearSpeed;
+            Vector3 desiredVelocity = (worldWanderPoint - agent.Position).normalized * agent.MaxLinearHorizontalSpeed;
             Vector3 steer = desiredVelocity - agent.LinearVelocity;
 
             m_WanderAngle += Random.Range(-m_AngleChange, m_AngleChange) * Mathf.Deg2Rad;

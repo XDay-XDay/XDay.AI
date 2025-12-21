@@ -32,7 +32,12 @@ namespace XDay.AI
             if (m_Prefab != null)
             {
                 var gameObject = Object.Instantiate(m_Prefab);
-                gameObject.transform.SetParent(Renderer.Agent.Root, false);
+                var root = Renderer.Agent.Root;
+                gameObject.transform.SetParent(root, false);
+                if (root == null)
+                {
+                    gameObject.transform.position = Renderer.Agent.Position;
+                }
                 Renderer.SetGameObject(gameObject);
             }
         }

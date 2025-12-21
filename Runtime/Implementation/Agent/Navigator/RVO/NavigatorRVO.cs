@@ -43,12 +43,12 @@ namespace XDay.AI
                 if (distance < m_SlowDistance)
                 {
                     var delta = distance / m_SlowDistance;
-                    float speed = m_Agent.MaxLinearSpeed * m_DistanceOperator(delta);
+                    float speed = m_Agent.MaxLinearHorizontalSpeed * m_DistanceOperator(delta);
                     desired *= speed;
                 }
                 else
                 {
-                    desired *= m_Agent.MaxLinearSpeed;
+                    desired *= m_Agent.MaxLinearHorizontalSpeed;
                 }
 
                 simulator.setAgentPrefVelocity(m_RVOAgentID, ToVector2(desired));
@@ -86,7 +86,7 @@ namespace XDay.AI
         {
             Debug.Assert(agent != null, "Agent is null");
             m_Agent = agent;
-            m_RVOAgentID = Simulator.Instance.addAgent(ToVector2(agent.Position), agent.MaxLinearSpeed, agent.ColliderRadius, ToVector2(agent.LinearVelocity));
+            m_RVOAgentID = Simulator.Instance.addAgent(ToVector2(agent.Position), agent.MaxLinearHorizontalSpeed, agent.ColliderRadius, ToVector2(agent.LinearVelocity));
         }
 
         private int m_RVOAgentID = -1;

@@ -33,12 +33,12 @@ namespace XDay.AI
                 if (distance < m_SlowDistance)
                 {
                     var delta = distance / m_SlowDistance;
-                    float speed = agent.MaxLinearSpeed * m_DistanceOperator(delta);
+                    float speed = agent.MaxLinearHorizontalSpeed * m_DistanceOperator(delta);
                     desired *= speed;
                 }
                 else
                 {
-                    desired *= agent.MaxLinearSpeed;
+                    desired *= agent.MaxLinearHorizontalSpeed;
                 }
                 return desired - agent.LinearVelocity;
             }

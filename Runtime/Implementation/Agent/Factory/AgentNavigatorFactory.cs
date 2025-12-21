@@ -12,6 +12,11 @@ namespace XDay.AI
 
         public INavigator CreateAgentNavigator(NavigatorConfig config, IAgent agent)
         {
+            if (config == null)
+            {
+                return null;
+            }
+
             if (m_Creators.TryGetValue(config.GetType(), out var creator))
             {
                 return creator(config, agent);

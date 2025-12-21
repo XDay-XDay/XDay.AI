@@ -17,17 +17,6 @@ namespace XDay.AI.Editor
 
         public void OnGUI()
         {
-            EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Refresh"))
-            {
-                Refresh();
-            }
-            if (GUILayout.Button("Save"))
-            {
-                Save();
-            }
-            EditorGUILayout.EndHorizontal();
-
             DrawNavigatorConfigs();
 
             EditorGUI.indentLevel++;
@@ -54,7 +43,7 @@ namespace XDay.AI.Editor
             navigatorConfig.SlowDistance = EditorGUILayout.FloatField("Slow Distance", navigatorConfig.SlowDistance);
         }
 
-        private void Refresh()
+        public void Refresh()
         {
             GetNavigatorConfigNames();
         }
@@ -96,7 +85,7 @@ namespace XDay.AI.Editor
             return null;
         }
 
-        private void Save()
+        public void Save()
         {
             if (m_ActiveConfigIndex >= 0 && m_ActiveConfigIndex < m_Configs.Count)
             {

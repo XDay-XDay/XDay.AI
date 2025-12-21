@@ -38,6 +38,7 @@ namespace XDay.AI
         void OnDestroy();
 
         void Update(float deltaTime);
+        void FixedUpdate();
 
         IAgent CreateAgent(AgentConfig config, Vector3 position);
         void RemoveAgent(IAgent agent);

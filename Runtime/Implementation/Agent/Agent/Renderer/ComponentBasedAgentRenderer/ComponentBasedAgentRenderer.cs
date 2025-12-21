@@ -92,6 +92,14 @@ namespace XDay.AI
             }
         }
 
+        public void Update(float dt)
+        {
+            foreach (var component in m_Components)
+            {
+                component.Update(dt);
+            }
+        }
+
         protected virtual void OnGameObjectChanged() { }
 
         private IAgent m_Agent;

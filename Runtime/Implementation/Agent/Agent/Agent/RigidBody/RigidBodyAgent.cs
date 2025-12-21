@@ -3,8 +3,11 @@ using XDay.UtilityAPI;
 
 namespace XDay.AI
 {
-    [AgentLabel(typeof(Physics3DAgentConfig))]
-    internal class Physics3DAgent : Agent
+    /// <summary>
+    /// 使用Unity内置的RigidBody实现的Agent
+    /// </summary>
+    [AgentLabel(typeof(RigidBodyAgentConfig))]
+    internal class RigidBodyAgent : Agent
     {
         public override Vector3 Position 
         { 
@@ -17,19 +20,20 @@ namespace XDay.AI
 #else
         public override Vector3 LinearVelocity { get => m_Rigidbody.linearVelocity; set => m_Rigidbody.linearVelocity = value; }
 #endif
-        public override float MaxLinearSpeed { get => m_Rigidbody.maxLinearVelocity; set => m_Rigidbody.maxLinearVelocity = value; }
+        public override float MaxLinearHorizontalSpeed { get => m_Rigidbody.maxLinearVelocity; set => m_Rigidbody.maxLinearVelocity = value; }
+        public override float MaxLinearVerticalSpeed { get => MaxLinearHorizontalSpeed; set => MaxLinearHorizontalSpeed = value; }
         public override float MaxAngularSpeed { get => m_Rigidbody.maxAngularVelocity; set => m_Rigidbody.maxAngularVelocity = value; }
         public override Transform Root => m_Rigidbody.transform;
 
-        public Physics3DAgent(int id, AgentConfig config, IWorld world, Vector3 position)
+        public RigidBodyAgent(int id, AgentConfig config, IWorld world, Vector3 position)
             : base(id, config, world, position)
         {
-            var cfg = config as Physics3DAgentConfig;
+            var cfg = config as RigidBodyAgentConfig;
 
             CreateRigidbody();
             Position = position;
             m_Rigidbody.detectCollisions = cfg.EnableCollision;
-            MaxLinearSpeed = cfg.MaxLinearSpeed;
+            MaxLinearHorizontalSpeed = cfg.MaxLinearHorizontalSpeed;
             MaxAngularSpeed = cfg.MaxAngularSpeed;
         }
 
@@ -46,14 +50,22 @@ namespace XDay.AI
             m_Rigidbody.AddForce(force, mode);
         }
 
+        public override void Stop()
+        {
+            LinearVelocity = Vector3.zero;
+            m_Rigidbody.angularVelocity = Vector3.zero;
+        }
+
         private void CreateRigidbody()
         {
             var gameObject = new GameObject($"{Name} Rigidbody");
-            var collider = gameObject.AddComponent<UnityEngine.SphereCollider>();
+            var collider = gameObject.AddComponent<UnityEngine.CapsuleCollider>();
             collider.radius = ColliderRadius;
+            collider.center = new Vector3(0, 1, 0);
+            collider.height = 2;
             m_Rigidbody = gameObject.AddComponent<UnityEngine.Rigidbody>();
             m_Rigidbody.useGravity = false;
-            m_Rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
+            m_Rigidbody.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;
         }
 
         private UnityEngine.Rigidbody m_Rigidbody;

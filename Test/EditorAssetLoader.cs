@@ -29,7 +29,7 @@ using UnityEditor;
 using UnityEngine;
 using XDay.WorldAPI;
 
-public class AssetLoader : IWorldAssetLoader
+public class EditorAssetLoader : IWorldAssetLoader
 {
     public void OnDestroy()
     {
@@ -94,7 +94,7 @@ public class AssetLoader : IWorldAssetLoader
         return await UniTask.FromResult(ret);
     }
 
-    public async UniTaskVoid LoadGameObjectAsync(string path, System.Action<GameObject> onLoaded)
+    public void LoadGameObjectAsync(string path, System.Action<GameObject> onLoaded)
     {
         var ret = LoadGameObject(path);
         onLoaded?.Invoke(ret);

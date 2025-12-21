@@ -16,7 +16,7 @@ namespace XDay.AI
             if (targetVelocity != Vector3.zero)
             {
                 float relativeSpeed = Vector3.Dot(targetVelocity - agent.LinearVelocity, toTarget.normalized);
-                relativeSpeed = Mathf.Max(relativeSpeed, agent.MaxLinearSpeed * 0.1f);
+                relativeSpeed = Mathf.Max(relativeSpeed, agent.MaxLinearHorizontalSpeed * 0.1f);
                 var predictedTime = toTarget.magnitude / relativeSpeed;
                 m_PredictedPosition = agent.TargetPosition + targetVelocity * predictedTime;
             }
@@ -25,7 +25,7 @@ namespace XDay.AI
                 m_PredictedPosition = agent.TargetPosition;
             }
 
-            Vector3 desiredVelocity = (m_PredictedPosition - agent.Position).normalized * agent.MaxLinearSpeed;
+            Vector3 desiredVelocity = (m_PredictedPosition - agent.Position).normalized * agent.MaxLinearHorizontalSpeed;
             Vector3 steer = desiredVelocity - agent.LinearVelocity;
 
             return steer;

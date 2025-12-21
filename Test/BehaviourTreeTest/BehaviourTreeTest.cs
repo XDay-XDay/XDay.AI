@@ -23,6 +23,7 @@
 
 #if UNITY_EDITOR
 
+using Game.Asset;
 using UnityEditor;
 using UnityEngine;
 using XDay.AI.BT;
@@ -34,7 +35,7 @@ internal class BehaviourTreeTest : MonoBehaviour
 
     private void Start()
     {
-        Global.InitRuntime(new AssetLoader(), EditorHelper.QueryAssetFilePath<VariableManagerState>());
+        Global.InitRuntime(new RuntimeAssetLoader(), EditorHelper.QueryAssetFilePath<VariableManagerState>());
         m_Tree1 = Global.RuntimeBehaviourTreeManager.CreateTree(AssetDatabase.GetAssetPath(TreeState), "Test Tree1");
     }
 
