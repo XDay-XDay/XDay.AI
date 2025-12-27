@@ -58,5 +58,8 @@ namespace XDay.AI
         bool Raycast(Vector3 position, Vector3 direction, float length, int layerMask, out HitInfo hitInfo);
 
         INavigator CreateNavigator(NavigatorConfig config, IAgent agent);
+
+        void CreateRenderContainer(IAgentRendererContainerCreateInfo createInfo);
+        void DestroyRenderContainer();
     }
 }

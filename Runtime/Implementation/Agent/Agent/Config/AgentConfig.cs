@@ -53,7 +53,19 @@ namespace XDay.AI
             if (ShowInInspector)
             {
                 EditorGUI.indentLevel++;
+                EditorGUILayout.BeginHorizontal();
+
+                EditorGUI.BeginChangeCheck();
                 Name = EditorGUILayout.TextField("Name", Name);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    if (!string.IsNullOrEmpty(Name))
+                    {
+                        var path = AssetDatabase.GetAssetPath(this);
+                        AssetDatabase.RenameAsset(path, Name);
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
                 ConfigID = EditorGUILayout.IntField("Config ID", ConfigID);
                 MaxLinearHorizontalSpeed = EditorGUILayout.FloatField("Max Linear Horizontal Speed", MaxLinearHorizontalSpeed);
                 MaxLinearVerticalSpeed = EditorGUILayout.FloatField("Max Linear Vertical Speed", MaxLinearVerticalSpeed);

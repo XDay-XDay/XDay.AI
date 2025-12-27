@@ -37,11 +37,16 @@ namespace XDay.AI
             m_AgentContainer = m_AgentContainerFactory.CreateAgentContainer(createInfo.ContainerCreateInfo);
             m_ObstacleManager = m_ObstacleManagerFactory.CreateObstacleManager(createInfo.ObstacleManagerCreateInfo);
             m_WorldCuller = m_WorldCullerFactory.CreateWorldCuller(createInfo.WorldCullerCreateInfo);
-            m_AgentRendererContainer = m_AgentRendererContainerFactory.CreateAgentRendererContainer(createInfo.RendererContainerCreateInfo, this);
+
+            if (createInfo.RendererContainerCreateInfo != null)
+            {
+                m_AgentRendererContainer = m_AgentRendererContainerFactory.CreateAgentRendererContainer(createInfo.RendererContainerCreateInfo, this);
+            }
         }
 
         public void OnDestroy()
         {
+            Debug.LogError("todo");
         }
 
         public void Update(float dt)
@@ -49,12 +54,25 @@ namespace XDay.AI
             m_WorldCuller.Update(dt);
             m_WorldTicker?.Update(dt);
             m_AgentContainer.Update(dt);
-            m_AgentRendererContainer.Update(dt);
+            m_AgentRendererContainer?.Update(dt);
         }
 
         public void FixedUpdate()
         {
             m_AgentContainer.FixedUpdate();
+        }
+
+        public void CreateRenderContainer(IAgentRendererContainerCreateInfo createInfo)
+        {
+            DestroyRenderContainer();
+
+            m_AgentRendererContainer = m_AgentRendererContainerFactory.CreateAgentRendererContainer(createInfo, this);
+        }
+
+        public void DestroyRenderContainer() 
+        {
+            m_AgentRendererContainer?.OnDestroy();
+            m_AgentRendererContainer = null;
         }
 
         public IAgent CreateAgent(AgentConfig config, Vector3 position)
@@ -210,7 +228,7 @@ namespace XDay.AI
         private WorldCullerFactory m_WorldCullerFactory;
         private AgentNavigatorFactory m_AgentNavigatorFactory;
         private readonly IAgentContainer m_AgentContainer;
-        private readonly IAgentRendererContainer m_AgentRendererContainer;
+        private IAgentRendererContainer m_AgentRendererContainer;
         private readonly IWorldTicker m_WorldTicker;
         private readonly IWorldCuller m_WorldCuller;
         private readonly IObstacleManager m_ObstacleManager;

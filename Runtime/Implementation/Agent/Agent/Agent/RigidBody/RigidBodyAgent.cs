@@ -7,7 +7,7 @@ namespace XDay.AI
     /// 使用Unity内置的RigidBody实现的Agent
     /// </summary>
     [AgentLabel(typeof(RigidBodyAgentConfig))]
-    internal class RigidBodyAgent : Agent
+    public class RigidBodyAgent : Agent
     {
         public override Vector3 Position 
         { 

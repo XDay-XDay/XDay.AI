@@ -6,6 +6,7 @@ namespace XDay.AI
         void Update(float dt);
 
         T GetRenderer<T>(int agentID) where T : IAgentRenderer;
+        void OnDestroy();
     }
 
     public interface IAgentRendererContainerCreateInfo

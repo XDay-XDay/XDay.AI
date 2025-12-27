@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace XDay.AI
 {
-    internal abstract class Agent : IAgent
+    public abstract class Agent : IAgent
     {
         public int ID => m_ID;
         public int CurrentLOD => m_CurrentLOD;
@@ -122,7 +122,7 @@ namespace XDay.AI
             }
         }
 
-        public void DrawGizmos()
+        public virtual void DrawGizmos()
         {
             var old = Gizmos.color;
             foreach (var detector in m_LineDetectors)

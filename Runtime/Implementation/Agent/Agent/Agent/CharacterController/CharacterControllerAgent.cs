@@ -7,7 +7,7 @@ namespace XDay.AI
     /// 使用Unity内置的CharacterController实现的Agent
     /// </summary>
     [AgentLabel(typeof(CharacterControllerAgentConfig))]
-    internal class CharacterControllerAgent : Agent, ICharacterControllerAgent
+    public class CharacterControllerAgent : Agent, ICharacterControllerAgent
     {
         public override Vector3 Position
         {
@@ -86,13 +86,6 @@ namespace XDay.AI
             }
 
             m_TotalForce = Vector3.zero;
-
-            if (m_Controller.isGrounded)
-            {
-                //m_LinearVelocity.y = 0;
-            }
-
-            //Debug.LogError($"isGrounded: {m_Controller.isGrounded}");
         }
 
         private void CreateCharacterController(CharacterControllerAgentConfig cfg)
