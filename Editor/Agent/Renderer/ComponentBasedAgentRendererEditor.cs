@@ -64,10 +64,26 @@ namespace XDay.AI.Editor
                     continue;
                 }
 
-                var deleted = config.Components[i].InspectorGUI(i);
+                var deleted = config.Components[i].InspectorGUI(i, config.Components.Count, out var swapped);
+
+                if (swapped == SwapType.UpDown)
+                {
+                    (config.Components[i], config.Components[i + 1]) = (config.Components[i + 1], config.Components[i]);
+                    Save();
+                    break;
+                }
+                else if (swapped == SwapType.DownUp)
+                {
+                    (config.Components[i], config.Components[i - 1]) = (config.Components[i - 1], config.Components[i]);
+                    Save();
+                    break;
+                }
+
+                EditorHelper.HorizontalLine(Color.green);
                 if (deleted)
                 {
                     config.Components.RemoveAt(i);
+                    Save();
                     break;
                 }
             }

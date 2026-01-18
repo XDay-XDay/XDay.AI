@@ -51,7 +51,7 @@ public class AgentTest : MonoBehaviour
     {
         AgentConfig config = AssetManager.Load<CharacterControllerAgentConfig>("Assets/Game/Packages/XDayUnity.AI/Test/AgentTest/Character Controller Agent.asset");
 
-        var agent = m_World.CreateAgent(config, position);
+        var agent = m_World.CreateAgent(config, position, Quaternion.identity);
         m_Agents.Add(agent);
     }
 
@@ -59,7 +59,7 @@ public class AgentTest : MonoBehaviour
     {
         AgentConfig config = AssetManager.Load<RigidBodyAgentConfig>("Assets/Game/Packages/XDayUnity.AI/Test/AgentTest/SteeringForceAgent.asset");
 
-        var agent = m_World.CreateAgent(config, position);
+        var agent = m_World.CreateAgent(config, position, Quaternion.identity);
         m_Agents.Add(agent);
 
         agent.Target = m_Target;
@@ -69,7 +69,7 @@ public class AgentTest : MonoBehaviour
     {
         AgentConfig config = AssetManager.Load<RigidBodyAgentConfig>("Assets/Game/Res/RVOAgent.asset");
 
-        var agent = m_World.CreateAgent(config, position);
+        var agent = m_World.CreateAgent(config, position, Quaternion.identity);
         m_Agents.Add(agent);
         agent.Target = m_Target;
     }

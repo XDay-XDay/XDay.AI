@@ -40,7 +40,7 @@ namespace XDay.AI
         void Update(float deltaTime);
         void FixedUpdate();
 
-        IAgent CreateAgent(AgentConfig config, Vector3 position);
+        IAgent CreateAgent(AgentConfig config, Vector3 position, Quaternion rotation);
         void RemoveAgent(IAgent agent);
         IAgent GetAgent(int id);
         void GetAllAgents(List<IAgent> allAgents);
@@ -54,6 +54,7 @@ namespace XDay.AI
         /// <param name="maxY"></param>
         /// <param name="outAgents"></param>
         void QueryAgents(float minX, float minY, float maxX, float maxY, List<IAgent> outAgents);
+        void QueryAgents(Vector3 center, float radius, List<IAgent> outAgents);
 
         bool Raycast(Vector3 position, Vector3 direction, float length, int layerMask, out HitInfo hitInfo);
 
@@ -61,5 +62,6 @@ namespace XDay.AI
 
         void CreateRenderContainer(IAgentRendererContainerCreateInfo createInfo);
         void DestroyRenderContainer();
+        void DrawGizmo();
     }
 }

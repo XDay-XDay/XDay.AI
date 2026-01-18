@@ -30,6 +30,7 @@ namespace XDay.AI
         string Name { get; set; }
         Vector3 Position { get; set; }
         Quaternion Rotation { get; set; }
+        Quaternion TargetRotation { get; set; }
         Vector3 LinearVelocity { get; set; }
         float MaxLinearAcceleration { get; set; }
         float MaxLinearHorizontalSpeed { get; }
@@ -47,6 +48,7 @@ namespace XDay.AI
         /// ¿ÉÄÜÎª¿Õ
         /// </summary>
         Transform Root { get; }
+        string Animation { get; set; }
 
         void Init();
 
@@ -86,6 +88,7 @@ namespace XDay.AI
         void Update(float dt);
         void SetActive(bool active);
         void SetGameObject(GameObject gameObject);
+        void DrawGizmo();
     }
 
     public interface IAgentTarget

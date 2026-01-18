@@ -102,6 +102,14 @@ namespace XDay.AI
 
         protected virtual void OnGameObjectChanged() { }
 
+        public void DrawGizmo()
+        {
+            foreach (var component in m_Components)
+            {
+                component.DrawGizmo();
+            }
+        }
+
         private IAgent m_Agent;
         private GameObject m_GameObject;
         private readonly List<AgentRendererComponent> m_Components = new();

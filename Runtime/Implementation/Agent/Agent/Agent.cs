@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace XDay.AI
@@ -46,8 +47,23 @@ namespace XDay.AI
             }
         }
         public AgentConfig Config => m_Config;
+        public Quaternion TargetRotation
+        {
+            get => m_TargetRotation;
+            set => m_TargetRotation = value;
+        }
+        public event Action<string> EventAnimationChanged;
+        public string Animation
+        {
+            get => m_Animation;
+            set
+            {
+                m_Animation = value;
+                EventAnimationChanged?.Invoke(m_Animation);
+            }
+        }
 
-        public Agent(int id, AgentConfig config, IWorld world, Vector3 position)
+        public Agent(int id, AgentConfig config, IWorld world, Vector3 position, Quaternion rotation)
         {
             m_ID = id;
             m_Name = config.Name;
@@ -89,15 +105,20 @@ namespace XDay.AI
         {
             m_Navigator?.Update(dt);
 
-            var vel = LinearVelocity;
-            vel.y = 0;
-            if (vel != Vector3.zero)
+            var dir = GetRotateDirection();
+            dir.y = 0;
+            if (dir != Vector3.zero)
             {
-                var dir = Quaternion.LookRotation(vel, Vector3.up);
-                Rotation = Quaternion.RotateTowards(Rotation, dir, MaxAngularSpeed * dt);
+                TargetRotation = Quaternion.LookRotation(dir, Vector3.up);
             }
+            Rotation = Quaternion.RotateTowards(Rotation, TargetRotation, MaxAngularSpeed * dt);
 
             UpdateLineDetectors();
+        }
+
+        protected virtual Vector3 GetRotateDirection()
+        {
+            return LinearVelocity;
         }
 
         public virtual void FixedUpdate()
@@ -172,6 +193,8 @@ namespace XDay.AI
         private float m_ReachDistance = 0.5f;
         private float m_ColliderRadius = 0.5f;
         private float m_MaxLinearAcceleration = 100f;
+        private Quaternion m_TargetRotation = Quaternion.identity;
+        private string m_Animation;
         private bool m_Invalid = false;
         private readonly AgentConfig m_Config;
         private readonly List<LineDetector> m_LineDetectors = new();

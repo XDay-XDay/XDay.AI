@@ -4,7 +4,7 @@ using XDay.UtilityAPI;
 
 namespace XDay.AI.Editor
 {
-    internal partial class AIEditor : EditorWindow
+    public partial class AIEditor : EditorWindow
     {
         [MenuItem("XDay/AI/Editor")]
         private static void Open()
@@ -65,6 +65,18 @@ namespace XDay.AI.Editor
                     }
                 default: GUILayout.Label("Tab index is out of bounds"); break;
             }
+        }
+        
+        public void SelectAgentConfig(AgentConfig config)
+        {
+            if (config == null)
+            {
+                return;
+            }
+
+            m_SelectedTabIndex = AgentTab;
+            SetAgentTab(AgentInfoTab);
+            m_AgentEditor.Select(config);
         }
 
         private void RemoveInvalidAll()

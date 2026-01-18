@@ -3,7 +3,7 @@ using XDay.UtilityAPI;
 
 namespace XDay.AI.Editor
 {
-    internal partial class AIEditor
+    public partial class AIEditor
     {
         public void SetAgentTab(int tab)
         {

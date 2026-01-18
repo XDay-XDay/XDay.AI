@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace XDay.AI
 {
@@ -49,6 +50,20 @@ namespace XDay.AI
             }
         }
 
+        public void QueryAgents(Vector3 center, float radius, List<IAgent> outAgents)
+        {
+            var r2 = radius * radius;
+            foreach (var agent in m_Agents.Values)
+            {
+                var pos = agent.Position;
+                var dis = (center - pos).sqrMagnitude;
+                if (dis <= r2)
+                {
+                    outAgents.Add(agent);
+                }
+            }
+        }
+
         public void Update(float dt)
         {
             foreach (var agent in m_Agents.Values)
@@ -62,6 +77,14 @@ namespace XDay.AI
             foreach (var agent in m_Agents.Values)
             {
                 agent.FixedUpdate();
+            }
+        }
+
+        public void DrawGizmo()
+        {
+            foreach (var agent in m_Agents.Values)
+            {
+                agent.DrawGizmos();
             }
         }
 

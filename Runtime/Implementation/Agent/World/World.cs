@@ -62,6 +62,12 @@ namespace XDay.AI
             m_AgentContainer.FixedUpdate();
         }
 
+        public void DrawGizmo()
+        {
+            m_AgentContainer.DrawGizmo();
+            m_AgentRendererContainer?.DrawGizmo();
+        }
+
         public void CreateRenderContainer(IAgentRendererContainerCreateInfo createInfo)
         {
             DestroyRenderContainer();
@@ -75,9 +81,9 @@ namespace XDay.AI
             m_AgentRendererContainer = null;
         }
 
-        public IAgent CreateAgent(AgentConfig config, Vector3 position)
+        public IAgent CreateAgent(AgentConfig config, Vector3 position, Quaternion rotation)
         {
-            var agent = m_AgentFactory.CreateAgent(++m_NextID, config, this, position);
+            var agent = m_AgentFactory.CreateAgent(++m_NextID, config, this, position, rotation);
             agent.Init();
             m_AgentContainer.Add(agent);
 
@@ -94,6 +100,11 @@ namespace XDay.AI
         public void QueryAgents(float minX, float minY, float maxX, float maxY, List<IAgent> outAgents)
         {
             m_AgentContainer.QueryAgents(minX, minY, maxX, maxY, outAgents);
+        }
+
+        public void QueryAgents(Vector3 center, float radius, List<IAgent> outAgents)
+        {
+            m_AgentContainer.QueryAgents(center, radius, outAgents);
         }
 
         public void RemoveAgent(IAgent agent)
@@ -127,9 +138,9 @@ namespace XDay.AI
             foreach (var type in agentTypes)
             {
                 var attribute = type.GetCustomAttribute<AgentLabel>();
-                m_AgentFactory.RegisterCreator(attribute.ConfigType, (id, createInfo, world, position) =>
+                m_AgentFactory.RegisterCreator(attribute.ConfigType, (id, createInfo, world, position, rotation) =>
                 {
-                    object[] constructorArgs = { id, createInfo, world, position };
+                    object[] constructorArgs = { id, createInfo, world, position, rotation };
                     return Activator.CreateInstance(type, constructorArgs) as IAgent;
                 });
             }

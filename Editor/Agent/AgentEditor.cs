@@ -65,7 +65,31 @@ namespace XDay.AI.Editor
                 }
                 EditorGUI.BeginChangeCheck();
 
-                config.InspectorGUI(idx, out var selectRenderer, out var ping, out var deleted, out var copyPath);
+                var scrollPos = config.InspectorGUI(idx, group.Configs.Count, out var selectRenderer, out var ping, out var deleted, out var copyPath, out var moveToGroup, out var swapped);
+
+                if (scrollPos.x >= 0)
+                {
+                    m_ConfigPositions[config] = scrollPos;
+                }
+
+                if (swapped == SwapType.UpDown)
+                {
+                    (group.Configs[idx], group.Configs[idx + 1]) = (group.Configs[idx + 1], group.Configs[idx]);
+                    Save();
+                    breakLoop = true;
+                }
+                else if (swapped == SwapType.DownUp)
+                {
+                    (group.Configs[idx], group.Configs[idx - 1]) = (group.Configs[idx - 1], group.Configs[idx]);
+                    Save();
+                    breakLoop = true;
+                }
+
+                if (moveToGroup)
+                {
+                    MoveConfigToOtherGroup(group, config);
+                    breakLoop = true;
+                }
 
                 if (copyPath)
                 {
@@ -80,6 +104,7 @@ namespace XDay.AI.Editor
                     }
                     FileUtil.DeleteFileOrDirectory(AssetDatabase.GetAssetPath(config));
                     group.Configs.Remove(config);
+                    Save();
                     breakLoop = true;
                     AssetDatabase.Refresh();
                 }
@@ -126,6 +151,28 @@ namespace XDay.AI.Editor
             EditorGUILayout.EndScrollView();
         }
 
+        private void MoveConfigToOtherGroup(AgentConfigGroup group, AgentConfig config)
+        {
+            GenericMenu menu = new();
+            foreach (var newGroup in m_Groups)
+            {
+                if (newGroup == group)
+                {
+                    continue;
+                }
+                var g = newGroup;
+                menu.AddItem(new GUIContent(newGroup.name), newGroup == group, () =>
+                {
+                    group.Configs.Remove(config);
+                    g.Configs.Add(config);
+                    EditorUtility.SetDirty(g);
+                    EditorUtility.SetDirty(group);
+                    AssetDatabase.SaveAssets();
+                });
+            }
+            menu.ShowAsContext();
+        }
+
         public void Refresh()
         {
             GetAgentGroupNames();
@@ -140,26 +187,45 @@ namespace XDay.AI.Editor
                 return;
             }
 
-            EditorGUIUtility.labelWidth = 110;
+            EditorGUIUtility.labelWidth = 50;
             EditorGUILayout.BeginHorizontal();
             var newIndex = EditorGUILayout.Popup("Groups", m_ActiveGroupIndex, m_AgentConfigGroupNames);
 
+            EditorGUIUtility.labelWidth = 60;
             m_ActiveRendererTypeIndex = EditorGUILayout.Popup("Renderer", m_ActiveRendererTypeIndex, m_AgentRendererConfigNames);
 
             EditorGUILayout.Space();
 
-            if (GUILayout.Button("+", GUILayout.MaxWidth(20)))
+            if (GUILayout.Button(new GUIContent("折叠", "全部折叠"), GUILayout.MaxWidth(40)))
+            {
+                Expand(group, false);
+            }
+
+            if (GUILayout.Button(new GUIContent("展开", "全部展开"), GUILayout.MaxWidth(40)))
+            {
+                Expand(group, true);
+            }
+
+            if (GUILayout.Button(new GUIContent("+", "新建Agent配置"), GUILayout.MaxWidth(20)))
             {
                 CreateAgentConfigContextMenu();
             }
 
-            if (GUILayout.Button("=>", GUILayout.MaxWidth(30)))
+            if (GUILayout.Button(new GUIContent("=>", "选中Agent Config Group资源"), GUILayout.MaxWidth(25)))
             {
                 EditorHelper.PingObject(group);
             }
             EditorGUILayout.EndHorizontal();
             EditorGUIUtility.labelWidth = 0;
             SetActiveGroup(newIndex);
+        }
+
+        private void Expand(AgentConfigGroup group, bool expand)
+        {
+            foreach (var config in group.Configs)
+            {
+                config.ShowInInspector = expand;
+            }
         }
 
         private void CreateAgentConfigContextMenu()
@@ -212,7 +278,6 @@ namespace XDay.AI.Editor
                         AssetDatabase.CreateAsset(agentConfig, $"{group.ConfigCreateFolder}/{name}.asset");
                         group.Configs.Add(agentConfig);
 
-                        EditorUtility.SetDirty(group);
                         Save();
                     }
                 });
@@ -315,6 +380,23 @@ namespace XDay.AI.Editor
             }
         }
 
+        internal void Select(AgentConfig config)
+        {
+            var idx = 0;
+            foreach (var group in m_Groups)
+            {
+                if (group.Configs.Contains(config))
+                {
+                    SetActiveGroup(idx);
+                    if (m_ConfigPositions.TryGetValue(config, out var pos))
+                    {
+                        m_ScrollPos = pos;
+                    }
+                }
+                ++idx;
+            }
+        }
+
         private int m_ActiveGroupIndex = -1;
         private int m_ActiveRendererTypeIndex = -1;
         private string[] m_AgentConfigGroupNames;
@@ -324,5 +406,6 @@ namespace XDay.AI.Editor
         private List<Type> m_AgentConfigTypes = new();
         private List<Type> m_AgentRendererConfigTypes = new();
         private AIEditor m_Editor;
+        private Dictionary<AgentConfig, Vector2> m_ConfigPositions = new();
     }
 }

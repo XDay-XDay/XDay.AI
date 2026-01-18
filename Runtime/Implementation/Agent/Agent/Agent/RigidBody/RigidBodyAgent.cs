@@ -25,8 +25,8 @@ namespace XDay.AI
         public override float MaxAngularSpeed { get => m_Rigidbody.maxAngularVelocity; set => m_Rigidbody.maxAngularVelocity = value; }
         public override Transform Root => m_Rigidbody.transform;
 
-        public RigidBodyAgent(int id, AgentConfig config, IWorld world, Vector3 position)
-            : base(id, config, world, position)
+        public RigidBodyAgent(int id, AgentConfig config, IWorld world, Vector3 position, Quaternion rotation)
+            : base(id, config, world, position, rotation)
         {
             var cfg = config as RigidBodyAgentConfig;
 

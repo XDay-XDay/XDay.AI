@@ -30,6 +30,13 @@ namespace XDay.AI
 
         public void OnDestroy()
         {
+            m_World.EventCreateAgent -= OnAgentCreated;
+            m_World.EventRemoveAgent -= OnAgentRemoved;
+            m_World.EventUpdateAgent -= OnAgentUpdated;
+            m_World.EventShowAgent -= OnAgentShow;
+            m_World.EventHideAgent -= OnAgentHide;
+            m_World.EventChangeAgentLOD -= OnAgentLODChanged;
+
             foreach (var kv in m_Renderers)
             {
                 kv.Value.OnDestroy();
@@ -179,6 +186,14 @@ namespace XDay.AI
                 }
 
                 list.Add(action);
+            }
+        }
+
+        public void DrawGizmo()
+        {
+            foreach (var renderer in m_Renderers.Values)
+            {
+                renderer.DrawGizmo();
             }
         }
 

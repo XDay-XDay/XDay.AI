@@ -30,14 +30,16 @@ namespace XDay.AI
             OnUpdate(dt);
         }
 
-        protected abstract void OnInit();
+        protected virtual void OnInit() { }
         protected virtual void OnPostInit() { }
-        protected abstract void OnDestroy();
+        protected virtual void OnDestroy() { }
         protected virtual void OnUpdate(float dt) { }
 
         internal virtual void OnGameObjectChanged(GameObject oldGameObject, GameObject gameObject)
         {
         }
+
+        internal virtual void DrawGizmo() { }
 
         private IAgentRenderer m_Renderer;
     }

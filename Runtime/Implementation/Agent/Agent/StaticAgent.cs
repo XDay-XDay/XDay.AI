@@ -11,13 +11,14 @@ namespace XDay.AI
         public int ID => m_ID;
         public int CurrentLOD => m_CurrentLOD;
         public string Name { get => m_Name; set => m_Name = value; }
-        public abstract Vector3 Position { get; set; }
-        public abstract Quaternion Rotation { get; set; }
+        public Vector3 Position { get => m_Root.transform.position; set => m_Root.transform.position = value; }
+        public Quaternion Rotation { get => m_Root.transform.rotation; set => m_Root.transform.rotation = value; }
+        public Vector3 Scale { get => m_Root.transform.lossyScale; set => m_Root.transform.localScale = value; }
         public virtual Vector3 LinearVelocity { get => Vector3.zero; set { } }
         public virtual float MaxLinearHorizontalSpeed { get => 0; set { } }
         public virtual float MaxLinearVerticalSpeed { get => 0; set { } }
         public virtual float MaxAngularSpeed { get => 0; set { } }
-        public virtual Transform Root => null;
+        public virtual Transform Root => m_Root.transform;
         public virtual bool Invalid { get => m_Invalid; set => m_Invalid = value; }
         public float MaxLinearAcceleration { get => 0; set { } }
         public float ReachDistance { get => 0; set { } }
@@ -29,15 +30,23 @@ namespace XDay.AI
         public Vector3 TargetPosition => throw new System.NotImplementedException();
         public Vector3 TargetVelocity => throw new System.NotImplementedException();
         public AgentConfig Config => m_Config;
+        public Quaternion TargetRotation
+        {
+            get => Rotation;
+            set => Rotation = value;
+        }
+        public string Animation { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
 
-        public StaticAgent(int id, AgentConfig config, IWorld world, Vector3 position)
+        public StaticAgent(int id, AgentConfig config, IWorld world, Vector3 position, Quaternion rotation)
         {
             m_ID = id;
             m_Name = config.Name;
             m_World = world;
             m_Config = config;
             m_ColliderRadius = config.ColliderRadius;
+            m_Root = new GameObject($"{m_Name}");
             Position = position;
+            Rotation = rotation;
         }
 
         public virtual void Init()
@@ -46,6 +55,7 @@ namespace XDay.AI
 
         public virtual void OnDestroy()
         {
+            Object.DestroyImmediate(m_Root);
             Invalid = true;
         }
 
@@ -95,6 +105,7 @@ namespace XDay.AI
         private readonly int m_ID;
         private int m_CurrentLOD = 0;
         private float m_ColliderRadius;
+        private GameObject m_Root;
         private bool m_Invalid = false;
     }
 }

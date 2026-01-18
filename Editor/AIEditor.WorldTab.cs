@@ -1,8 +1,7 @@
-﻿using System;
-
+﻿
 namespace XDay.AI.Editor
 {
-    internal partial class AIEditor
+    public partial class AIEditor
     {
         private void DrawWorldTab()
         {

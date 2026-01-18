@@ -12,6 +12,7 @@ namespace XDay.AI
         public Vector3 Center = new(0, 1, 0);
         public float StepOffset = 0.3f;
         public float SlopeLimit = 45f;
+        public float SkinWidth = 0;
         /// <summary>
         /// true表示用Force来移动,false表示直接使用Velocity移动
         /// </summary>
@@ -24,6 +25,7 @@ namespace XDay.AI
             Center = EditorGUILayout.Vector3Field("Center", Center);
             SlopeLimit = EditorGUILayout.FloatField("Slope Limit", SlopeLimit);
             StepOffset = EditorGUILayout.FloatField("Step Height", StepOffset);
+            SkinWidth = EditorGUILayout.FloatField("Skin Width", SkinWidth);
             MoveByForce = EditorGUILayout.Toggle("Move By Force", MoveByForce);
         }
 #endif

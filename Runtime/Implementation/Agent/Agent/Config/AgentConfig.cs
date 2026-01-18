@@ -8,6 +8,13 @@ using UnityEditorInternal;
 
 namespace XDay.AI
 {
+    public enum SwapType
+    {
+        None,
+        UpDown,
+        DownUp,
+    }
+
     public class AgentConfig : ScriptableObject
     {
         public int ConfigID;
@@ -26,15 +33,38 @@ namespace XDay.AI
         public bool ShowInInspector = true;
 
 #if UNITY_EDITOR
-        public void InspectorGUI(int index, out bool selectRenderer, out bool ping, out bool deleted, out bool copyPath)
+        public Vector2 InspectorGUI(int index, int n, out bool selectRenderer, out bool ping, out bool deleted, out bool copyPath, out bool moveToGroup, out SwapType swapped)
         {
             selectRenderer = false;
             ping = false;
             deleted = false;
             copyPath = false;
+            moveToGroup = false;
+            swapped = SwapType.None;
             EditorGUILayout.BeginHorizontal();
             ShowInInspector = EditorGUILayout.Foldout(ShowInInspector, $"{index}. {ConfigID}-{Name}           [{GetType().Name}]");
-            if (GUILayout.Button("=>", GUILayout.MaxWidth(30)))
+
+            var pos = new Vector2(-1, -1);
+            if (Event.current.type == EventType.Repaint)
+            {
+                pos = GUILayoutUtility.GetLastRect().min;
+            }
+
+            if (index > 0)
+            {
+                if (GUILayout.Button(new GUIContent("<", "向上移动"), GUILayout.MaxWidth(20)))
+                {
+                    swapped = SwapType.DownUp;
+                }
+            }
+            if (index < n - 1)
+            {
+                if (GUILayout.Button(new GUIContent(">", "向下移动"), GUILayout.MaxWidth(20)))
+                {
+                    swapped = SwapType.UpDown;
+                }
+            }
+            if (GUILayout.Button(new GUIContent("=>", "选中资源"), GUILayout.MaxWidth(25)))
             {
                 ping = true;
             }
@@ -42,7 +72,11 @@ namespace XDay.AI
             {
                 copyPath = true;
             }
-            if (GUILayout.Button("X", GUILayout.MaxWidth(20)))
+            if (GUILayout.Button(new GUIContent("^", "移动到其他Group"), GUILayout.MaxWidth(20)))
+            {
+                moveToGroup = true;
+            }
+            if (GUILayout.Button(new GUIContent("X", "删除"), GUILayout.MaxWidth(20)))
             {
                 if (EditorUtility.DisplayDialog("Warning", "Continue deletion?", "Yes", "No"))
                 {
@@ -91,6 +125,8 @@ namespace XDay.AI
                 OnInspectorGUI();
                 EditorGUI.indentLevel--;
             }
+
+            return pos;
         }
 
         protected virtual void OnInspectorGUI() { }
