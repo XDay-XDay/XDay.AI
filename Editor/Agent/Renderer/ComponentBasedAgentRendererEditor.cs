@@ -156,7 +156,7 @@ namespace XDay.AI.Editor
 
             EditorGUILayout.BeginHorizontal();
             EditorGUIUtility.labelWidth = 100;
-            m_SelectedComponentIndex = EditorGUILayout.Popup("Components", m_SelectedComponentIndex, m_ComponentTypeNames);
+            m_SelectedComponentIndex = EditorGUILayout.Popup(new GUIContent("Components"), m_SelectedComponentIndex, m_ComponentTypeNames);
             EditorGUIUtility.labelWidth = 0;
             if (GUILayout.Button("Add", GUILayout.MaxWidth(40)))
             {
@@ -203,39 +203,43 @@ namespace XDay.AI.Editor
 
         public void Save()
         {
-            if (m_ActiveConfigIndex >= 0 && m_ActiveConfigIndex < m_Configs.Count)
+            foreach (var config in m_Configs)
             {
-                EditorUtility.SetDirty(m_Configs[m_ActiveConfigIndex]);
-                AssetDatabase.SaveAssets();
+                EditorUtility.SetDirty(config);
             }
+            AssetDatabase.SaveAssets();
         }
 
         public void RemoveInvalid()
         {
-            var removed = false;
             var config = GetActiveConfig();
             for (var i = config.Components.Count - 1; i >= 0; i--)
             {
                 if (config.Components[i] == null)
                 {
                     config.Components.RemoveAt(i);
-                    removed = true;
                 }
             }
-            if (removed)
-            {
-                Save();
-            }
+            EditorUtility.SetDirty(config);
+            Save();
         }
 
         private void GetComponentTypeNames()
         {
-            m_ComponentConfigTypes = Common.QueryTypes<AgentRendererComponentConfig>(false);
-            m_ComponentTypeNames = new string[m_ComponentConfigTypes.Length];
-            for (var i = 0; i < m_ComponentConfigTypes.Length; i++)
+            var allTypes = Common.QueryTypes<AgentRendererComponentConfig>(false);
+            List<GUIContent> visibleComponents = new();
+            List<Type> visibleComponentConfigTypes = new();
+            for (var i = 0; i < allTypes.Length; i++)
             {
-                m_ComponentTypeNames[i] = Helper.GetClassAttribute<AgentComponentLabel>(m_ComponentConfigTypes[i]).DisplayName;
+                var label = Helper.GetClassAttribute<AgentComponentLabel>(allTypes[i]);
+                if (label.Show)
+                {
+                    visibleComponents.Add(new GUIContent(label.DisplayName, label.Tooltips));
+                    visibleComponentConfigTypes.Add(allTypes[i]);
+                }
             }
+            m_ComponentConfigTypes = visibleComponentConfigTypes.ToArray();
+            m_ComponentTypeNames = visibleComponents.ToArray();
 
             if (m_ComponentTypeNames.Length == 0)
             {
@@ -277,7 +281,7 @@ namespace XDay.AI.Editor
 
         private int m_ActiveConfigIndex = -1;
         private int m_SelectedComponentIndex = -1;
-        private string[] m_ComponentTypeNames;
+        private GUIContent[] m_ComponentTypeNames;
         private string[] m_RendererConfigNames;
         private Type[] m_ComponentConfigTypes;
         private List<ComponentBasedAgentRendererConfig> m_Configs = new();

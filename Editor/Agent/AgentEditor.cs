@@ -310,6 +310,7 @@ namespace XDay.AI.Editor
                 if (config.Configs[i] == null)
                 {
                     config.Configs.RemoveAt(i);
+                    EditorUtility.SetDirty(config);
                 }
             }
             Save();
@@ -317,10 +318,13 @@ namespace XDay.AI.Editor
 
         public void Save()
         {
-            var group = GetActiveGroup();
-            if (group != null)
+            foreach (var group in m_Groups)
             {
                 EditorUtility.SetDirty(group);
+                foreach (var config in group.Configs)
+                {
+                    EditorUtility.SetDirty(config);
+                }
             }
             AssetDatabase.SaveAssets();
         }
@@ -371,7 +375,7 @@ namespace XDay.AI.Editor
                     var config = group.Configs[i];
                     if (config.Renderer is ComponentBasedAgentRendererConfig c && c == rendererConfig)
                     {
-                        Debug.Log($"使用者:{i}. {config.ConfigID}-{config.Name}");
+                        Debug.Log($"使用者:{i}.{config.Name}");
                         SetActiveGroup(groupIdx);
                         break;
                     }

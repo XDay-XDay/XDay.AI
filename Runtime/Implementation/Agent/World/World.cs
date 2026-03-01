@@ -9,12 +9,12 @@ namespace XDay.AI
 {
     internal class World : IWorld
     {
-        public event Action<IAgent> EventCreateAgent;
-        public event Action<IAgent> EventRemoveAgent;
-        public event Action<IAgent> EventUpdateAgent;
-        public event Action<IAgent> EventShowAgent;
-        public event Action<IAgent> EventHideAgent;
-        public event Action<IAgent, int, int> EventChangeAgentLOD;
+        public XDayEvent<IAgent> EventCreateAgent { get; } = new();
+        public XDayEvent<IAgent> EventRemoveAgent { get; } = new();
+        public XDayEvent<IAgent> EventUpdateAgent { get; } = new();
+        public XDayEvent<IAgent> EventShowAgent { get; } = new();
+        public XDayEvent<IAgent> EventHideAgent { get; } = new();
+        public XDayEvent<IAgent, int, int> EventChangeAgentLOD { get; } = new();
         public IWorldAssetLoader AssetLoader => m_AssetLoader;
 
         public World(WorldCreateInfo createInfo)

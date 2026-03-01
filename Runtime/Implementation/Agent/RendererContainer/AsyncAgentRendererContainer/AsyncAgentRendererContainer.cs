@@ -10,12 +10,12 @@ namespace XDay.AI
         {
             m_World = world;
 
-            world.EventCreateAgent += OnAgentCreated;
-            world.EventRemoveAgent += OnAgentRemoved;
-            world.EventUpdateAgent += OnAgentUpdated;
-            world.EventShowAgent += OnAgentShow;
-            world.EventHideAgent += OnAgentHide;
-            world.EventChangeAgentLOD += OnAgentLODChanged;
+            world.EventCreateAgent.AddListener(OnAgentCreated);
+            world.EventRemoveAgent.AddListener(OnAgentRemoved);
+            world.EventUpdateAgent.AddListener(OnAgentUpdated);
+            world.EventShowAgent.AddListener(OnAgentShow);
+            world.EventHideAgent.AddListener(OnAgentHide);
+            world.EventChangeAgentLOD.AddListener(OnAgentLODChanged);
 
             m_CommandQueue = new(this);
             m_RendererPool = IObjectPool<IAgentRenderer>.Create(createFunc: () => new ComponentBasedAgentRenderer());
@@ -30,12 +30,12 @@ namespace XDay.AI
 
         public void OnDestroy()
         {
-            m_World.EventCreateAgent -= OnAgentCreated;
-            m_World.EventRemoveAgent -= OnAgentRemoved;
-            m_World.EventUpdateAgent -= OnAgentUpdated;
-            m_World.EventShowAgent -= OnAgentShow;
-            m_World.EventHideAgent -= OnAgentHide;
-            m_World.EventChangeAgentLOD -= OnAgentLODChanged;
+            m_World.EventCreateAgent.RemoveListener(OnAgentCreated);
+            m_World.EventRemoveAgent.RemoveListener(OnAgentRemoved);
+            m_World.EventUpdateAgent.RemoveListener(OnAgentUpdated);
+            m_World.EventShowAgent.RemoveListener(OnAgentShow);
+            m_World.EventHideAgent.RemoveListener(OnAgentHide);
+            m_World.EventChangeAgentLOD.RemoveListener(OnAgentLODChanged);
 
             foreach (var kv in m_Renderers)
             {

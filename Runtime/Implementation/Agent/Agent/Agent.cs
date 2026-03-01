@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using XDay.UtilityAPI;
 
 namespace XDay.AI
 {
@@ -52,14 +52,17 @@ namespace XDay.AI
             get => m_TargetRotation;
             set => m_TargetRotation = value;
         }
-        public event Action<string> EventAnimationChanged;
+        public XDayEvent<string> EventAnimationChanged = new();
         public string Animation
         {
             get => m_Animation;
             set
             {
-                m_Animation = value;
-                EventAnimationChanged?.Invoke(m_Animation);
+                if (m_Animation != value)
+                {
+                    m_Animation = value;
+                    EventAnimationChanged.Invoke(m_Animation);
+                }
             }
         }
 
@@ -89,10 +92,6 @@ namespace XDay.AI
         public virtual void Init()
         {
             var navigator = m_World.CreateNavigator(m_Config.Navigator, this);
-            if (navigator == null)
-            {
-                Debug.LogError("Navigator is null");
-            }
             m_Navigator = navigator;
         }
 

@@ -17,7 +17,6 @@ namespace XDay.AI
 
     public class AgentConfig : ScriptableObject
     {
-        public int ConfigID;
         public string Name;
         public float MaxLinearHorizontalSpeed = 5f;
         public float MaxLinearVerticalSpeed = 50;
@@ -42,7 +41,7 @@ namespace XDay.AI
             moveToGroup = false;
             swapped = SwapType.None;
             EditorGUILayout.BeginHorizontal();
-            ShowInInspector = EditorGUILayout.Foldout(ShowInInspector, $"{index}. {ConfigID}-{Name}           [{GetType().Name}]");
+            ShowInInspector = EditorGUILayout.Foldout(ShowInInspector, $"{index}.{Name}           [{GetType().Name}]");
 
             var pos = new Vector2(-1, -1);
             if (Event.current.type == EventType.Repaint)
@@ -100,7 +99,6 @@ namespace XDay.AI
                     }
                 }
                 EditorGUILayout.EndHorizontal();
-                ConfigID = EditorGUILayout.IntField("Config ID", ConfigID);
                 MaxLinearHorizontalSpeed = EditorGUILayout.FloatField("Max Linear Horizontal Speed", MaxLinearHorizontalSpeed);
                 MaxLinearVerticalSpeed = EditorGUILayout.FloatField("Max Linear Vertical Speed", MaxLinearVerticalSpeed);
                 MaxAngularSpeed = EditorGUILayout.FloatField("Max Angular Speed", MaxAngularSpeed);

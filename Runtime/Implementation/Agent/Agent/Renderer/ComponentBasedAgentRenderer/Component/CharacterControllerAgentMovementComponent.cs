@@ -6,7 +6,7 @@ using UnityEditor;
 #endif
 
 [System.Serializable]
-[AgentComponentLabel(typeof(CharacterControllerAgentMovementComponent), "Character Controller Agent Movement")]
+[AgentComponentLabel(typeof(CharacterControllerAgentMovementComponent), "Character Controller Agent Movement", "使用CharacterController的Agent移动", false)]
 public class CharacterControllerAgentMovementComponentConfig : AgentRendererComponentConfig
 {
     public float JumpSpeed = 5;
@@ -97,12 +97,14 @@ public class CharacterControllerAgentMovementComponent : AgentRendererComponent
             m_SlidingHorizontalVelocity = Vector2.zero;
         }
 
+        var velX = desiredHorizontalVelocity.x + m_SlidingHorizontalVelocity.x;
+        var velZ = desiredHorizontalVelocity.y + m_SlidingHorizontalVelocity.y;
         var curVerticalVelocity = curY + verticalVelocity - m_Gravity * Time.deltaTime;
-
-        SetLinearVelocity(agent, new Vector3(desiredHorizontalVelocity.x + m_SlidingHorizontalVelocity.x, curVerticalVelocity, desiredHorizontalVelocity.y + m_SlidingHorizontalVelocity.y));
+        var moving = verticalVelocity != 0 || velX != 0 || velZ != 0;
+        SetLinearVelocity(agent, moving, new Vector3(velX, curVerticalVelocity, velZ));
     }
 
-    protected virtual void SetLinearVelocity(IAgent agent, Vector3 vector3)
+    protected virtual void SetLinearVelocity(IAgent agent, bool moving, Vector3 vector3)
     {
         agent.LinearVelocity = vector3;
     }

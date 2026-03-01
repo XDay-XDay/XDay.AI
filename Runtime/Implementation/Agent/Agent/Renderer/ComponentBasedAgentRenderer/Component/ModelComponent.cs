@@ -7,7 +7,7 @@ using UnityEditor;
 namespace XDay.AI
 {
     [System.Serializable]
-    [AgentComponentLabel(typeof(ModelComponent), "Model")]
+    [AgentComponentLabel(typeof(ModelComponent), "Model", "模型", false)]
     public class ModelComponentConfig : AgentRendererComponentConfig
     {
         public GameObject Prefab;

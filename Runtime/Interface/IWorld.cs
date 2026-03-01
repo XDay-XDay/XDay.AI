@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using XDay.UtilityAPI;
 using XDay.WorldAPI;
 
 namespace XDay.AI
@@ -22,13 +23,13 @@ namespace XDay.AI
 
     public interface IWorld
     {
-        public event Action<IAgent> EventCreateAgent;
-        public event Action<IAgent> EventRemoveAgent;
-        public event Action<IAgent> EventUpdateAgent;
-        public event Action<IAgent> EventShowAgent;
-        public event Action<IAgent> EventHideAgent;
-        public event Action<IAgent, int, int> EventChangeAgentLOD;
-        public IWorldAssetLoader AssetLoader { get; }
+        XDayEvent<IAgent> EventCreateAgent { get; }
+        XDayEvent<IAgent> EventRemoveAgent { get; }
+        XDayEvent<IAgent> EventUpdateAgent { get; }
+        XDayEvent<IAgent> EventShowAgent { get; }
+        XDayEvent<IAgent> EventHideAgent { get; }
+        XDayEvent<IAgent, int, int> EventChangeAgentLOD { get; }
+        IWorldAssetLoader AssetLoader { get; }
 
         static IWorld Create(WorldCreateInfo createInfo)
         {

@@ -8,6 +8,11 @@ namespace XDay.AI
     {
         public void RegisterCreator(Type configType, Func<int, AgentConfig, IWorld, Vector3, Quaternion, IAgent> creator)
         {
+            if (m_Creators.ContainsKey(configType))
+            {
+                Debug.LogError($"Type {configType} already registered!");
+                return;
+            }
             m_Creators.Add(configType, creator);
         }
 

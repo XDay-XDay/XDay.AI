@@ -23,7 +23,17 @@ namespace XDay.AI
         public override float MaxLinearHorizontalSpeed { get => m_MaxLinearHorizontalSpeed; set => m_MaxLinearHorizontalSpeed = value; }
         public override float MaxLinearVerticalSpeed { get => m_MaxLinearVerticalSpeed; set => m_MaxLinearVerticalSpeed = value; }
         public override float MaxAngularSpeed { get => m_MaxAngularSpeed; set => m_MaxAngularSpeed = value; }
-        public override Transform Root => m_Controller.transform;
+        public override Transform Root
+        {
+            get
+            {
+                if (m_Controller == null)
+                {
+                    return null;
+                }
+                return m_Controller.transform;
+            }
+        }
         public bool IsGrounded => m_Controller.isGrounded;
         public CharacterController Controller => m_Controller;
         public bool MoveByForce => m_MoveByForce;

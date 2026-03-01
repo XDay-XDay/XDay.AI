@@ -50,7 +50,7 @@ namespace XDay.AI.Nav.Editor
             }
         }
         public override string TypeName => "EditorNavigationPlugin";
-        public override int FileIDOffset => WorldDefine.NAVIGATION_SYSTEM_FILE_ID_OFFSET;
+        public override int FileIDOffset => WorldDefine.NAVIGATION_SYSTEM_FILE_ID_START_OFFSET;
 
         public NavigationPlugin()
         {

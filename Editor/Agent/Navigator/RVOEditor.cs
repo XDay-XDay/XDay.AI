@@ -87,11 +87,11 @@ namespace XDay.AI.Editor
 
         public void Save()
         {
-            if (m_ActiveConfigIndex >= 0 && m_ActiveConfigIndex < m_Configs.Count)
+            foreach (var config in m_Configs)
             {
-                EditorUtility.SetDirty(m_Configs[m_ActiveConfigIndex]);
-                AssetDatabase.SaveAssets();
+                EditorUtility.SetDirty(config);
             }
+            AssetDatabase.SaveAssets();
         }
 
         private void GetNavigatorConfigNames()
